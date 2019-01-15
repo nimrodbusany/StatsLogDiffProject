@@ -1,5 +1,5 @@
 import networkx as nx
-import graph_filtering
+import GraphFiltering
 from BearLogParser import BearLogParser
 
 INIT_LABEL = '"init"'
@@ -264,15 +264,15 @@ if __name__ == '__main__':
         low_probability_filter = None  ##  0.05
         if low_probability_filter:
             print("FILTER APPLIED: low prob filter!")
-            g4 = graph_filtering.filter_low_probability_transitions(g4, low_probability_filter)
-            g5 = graph_filtering.filter_low_probability_transitions(g5, low_probability_filter)
+            g4 = GraphFiltering.filter_low_probability_transitions(g4, low_probability_filter)
+            g5 = GraphFiltering.filter_low_probability_transitions(g5, low_probability_filter)
             filtering_str += "_lp_" + str(low_probability_filter)
 
         simple_filter = 20
         if simple_filter:
             print("FILTER APPLIED: simple filter!")
-            g4 = graph_filtering.simple_filter_graph(g4, simple_filter, False)
-            g5 = graph_filtering.simple_filter_graph(g5, simple_filter, False)
+            g4 = GraphFiltering.simple_filter_graph(g4, simple_filter, False)
+            g5 = GraphFiltering.simple_filter_graph(g5, simple_filter, False)
             filtering_str += "_sim_" + str(simple_filter)
 
         write2file(g4, GRAPH_OUTPUT + log1_filename + filtering_str + '_k' + str(k) + DOT_SUFFIX)

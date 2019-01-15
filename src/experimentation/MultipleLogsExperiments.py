@@ -1,8 +1,8 @@
-from Multi_Log_Experiment_Results import Experiment_Result, compute_mle_k_future_dict, sample_traces
+from MultiLogExperimentResults import Experiment_Result, compute_mle_k_future_dict, sample_traces
 from BearLogParser import *
 from SimpleLogParser import SimpleLogParser
-from src.logs.log_generator import LogGeneator
-import src.statistical_diffs.statistical_log_diff_analyzer as sld
+from src.logs.ModelBasedLogGenerator import LogGeneator
+import src.statistical_diffs.StatisticalLogDiffAnalyzer as sld
 import itertools
 import pandas as pd
 
@@ -31,14 +31,14 @@ def get_logs(experiment_type, out_folder, full_log_size= 1000, biases = [0, 0.1,
         return logs , experiment_name, out_folder + 'bear_multiple_logs_0/'
 
     if experiment_type == 1:
-        LOG_PATH = '../../data/bear/filtered_logs/'
+        LOG_PATH = '../../data/bear/'
         mozilla_desktop = SimpleLogParser.read_log(LOG_PATH + 'desktop.log')
         mozilla_mobile = SimpleLogParser.read_log(LOG_PATH + 'mobile.log')
         duplicates_to_full_log_size(mozilla_desktop, full_log_size)
         duplicates_to_full_log_size(mozilla_mobile, full_log_size)
         experiment_name = "bear, desktop_mobile"
         logs.extend([mozilla_desktop, mozilla_desktop, mozilla_mobile, mozilla_mobile])
-        return logs, experiment_name, out_folder + 'bear_multiple_logs_1/'
+        return logs, experiment_name, out_folder + 'bear_multiple_logs/'
 
     if experiment_type == 2:
         for bias in biases:
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     ## Experiments main parameters
     ks = [2]
     min_diffs = [0.01, 0.05, 0.1, 0.2] #, 0.05, 0.1, 0.2, 0.4] #[0.01, 0.05, 0.1, 0.2, 0.4]
-    alphas = [0.05, 0.15, 0.25, 0.35] # [0.01, 0.05, 0.05, 0.1, 0.2, 0.4]
+    alphas = [0.05, 0.1, 0.15] # [0.01, 0.05, 0.05, 0.1, 0.2, 0.4]
 
     ## Repetition per configuration
 
@@ -93,17 +93,7 @@ if __name__ == '__main__':
 
                 for sample in traces_to_sample:
                     for trial in range(M): ## repeat the experiment for m randomally selected logs
-                        sampled_logs = []
-                        log1 = sample_traces(logs[0], sample)
-                        log2 = sample_traces(logs[1], sample)
-                        log3 = sample_traces(logs[2], sample)
-                        log4 = sample_traces(logs[3], sample)
-                        sampled_logs.append(log1)
-                        sampled_logs.append(log2)
-                        sampled_logs.append(log3)
-                        sampled_logs.append(log4)
-                        # for log in logs:
-                        #     sampled_logs.append(sample_traces(log, sample))
+                        sampled_logs = [sample_traces(log, sample) for log in logs]
                         alg = sld.MultipleSLPDAnalyzer(sampled_logs)
                         diffs = alg.find_statistical_diffs(k, min_diff, alpha)
                         if OUTPUT_ACTUAL_DIFFS:

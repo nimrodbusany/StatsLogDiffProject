@@ -1,6 +1,6 @@
-import src.statistical_diffs.statistical_log_diff_analyzer as sld
-from src.logs.log_generator import LogGeneator
-from src.statistical_modules.mle_for_log import *
+import src.statistical_diffs.StatisticalLogDiffAnalyzer as sld
+from src.logs.ModelBasedLogGenerator import LogGeneator
+from src.statistical_modules.MLEForLog import *
 from src.sampling.LogSampler import sample_traces
 import itertools
 import numpy as np

@@ -1,5 +1,5 @@
-from src.statistical_modules.hypothesis_testing import proportions_comparison, is_significant_by_multiple_proportions_test
-from src.logs.log_generator import LogGeneator
+from src.statistical_modules.HypothesisTesting import proportions_comparison, is_significant_by_multiple_proportions_test
+from src.logs.ModelBasedLogGenerator import LogGeneator
 from src.logs.LogFeatureExtractor import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -126,11 +126,11 @@ class MultipleSLPDAnalyzer:
 
         for i in range(len(transition_vals_per_log)): ## TODO find better solution
             vals = transition_vals_per_log[i]
-            if vals[0] < 8:
-                # logs_without_source_state.append(i)
-                increase_size = 8 / vals[0]
-                vals = (8, round(vals[1] * increase_size))
-                transition_vals_per_log[i] = vals
+            # if vals[0] < 8:
+            #     # logs_without_source_state.append(i)
+            #     increase_size = 8 / vals[0]
+            #     vals = (8, round(vals[1] * increase_size))
+            #     transition_vals_per_log[i] = vals
 
             a = np.ones(vals[1])
             b = np.zeros(vals[0])

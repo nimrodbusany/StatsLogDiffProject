@@ -1,5 +1,5 @@
-from src.graphs.graph import DGraph
-from src.main.config import RESULTS_PATH
+from src.graphs.Graph import DGraph
+from src.main.Config import RESULTS_PATH
 import numpy as np
 
 class LogGeneator:
@@ -88,7 +88,20 @@ class LogGeneator:
         return trace
 
     @classmethod
-    def produce_log_from_single_split_models(cls, bias = 0.0, size =10, add_dummy_initial= True, add_dummy_terminal= True):
+    def produce_log_from_single_model(cls, model, bias = 0.0, size_ =10, add_dummy_initial= True, add_dummy_terminal= True):
+        traces = []
+        for i in range(size_):
+            t = cls._generate_trace(model)
+            if add_dummy_initial:
+                t.insert(0, 'I')
+            if add_dummy_terminal:
+                t.append('T')
+            traces.append(tuple(t))
+        return traces
+
+
+    @classmethod
+    def produce_log_from_single_split_models(cls, bias = 0.0, size_ =10, add_dummy_initial= True, add_dummy_terminal= True):
         '''
             return logs from the model:
             1->(a, 0.5+bias)->2
@@ -99,15 +112,8 @@ class LogGeneator:
             :return:
             '''
         g = cls._generate_single_split_model(bias)
-        traces = []
-        for i in range(size):
-            t = cls._generate_trace(g)
-            if add_dummy_initial:
-                t.insert(0, 'I')
-            if add_dummy_terminal:
-                t.append('T')
-            traces.append(tuple(t))
-        return traces
+        return cls.produce_log_from_single_split_models(g, bias, size_ , add_dummy_initial, add_dummy_terminal)
+
 
     @classmethod
     def produce_toy_logs(cls, bias= 0.1, N=1000):

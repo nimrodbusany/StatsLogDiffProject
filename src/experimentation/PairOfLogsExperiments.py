@@ -1,8 +1,8 @@
 from Paired_Experiment_Results import Experiment_Result, compute_mle_k_future_dict, sample_traces
 from BearLogParser import *
 from SimpleLogParser import SimpleLogParser
-from src.logs.log_generator import LogGeneator
-import src.statistical_diffs.statistical_log_diff_analyzer as sld
+from src.logs.ModelBasedLogGenerator import LogGeneator
+import src.statistical_diffs.StatisticalLogDiffAnalyzer as sld
 import itertools
 import pandas as pd
 
