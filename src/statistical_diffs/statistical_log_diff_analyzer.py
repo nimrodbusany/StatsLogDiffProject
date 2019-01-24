@@ -117,6 +117,9 @@ class MultipleSLPDAnalyzer:
 
         for i in range(len(transition_vals_per_log)): ## TODO find better solution
             vals = transition_vals_per_log[i]
+            if vals[0] == -1:
+                logs.append([])
+                logs_to_analyze[i] = []
             a = np.ones(vals[1])
             b = np.zeros(vals[0])
             b[:len(a)] += a
@@ -141,9 +144,13 @@ class MultipleSLPDAnalyzer:
         for i in range(len(log_ids)):
             log_id = log_ids[i]
             vals1 = transition_vals_per_log[i]
+            if vals1[0] == -1:
+                continue
             for j in range(i+1, len(log_ids)):
                 log_id2 = log_ids[j]
                 vals2 = transition_vals_per_log[j]
+                if vals2[0] == -1:
+                    continue
                 statistical_diff, pairwise_test_results = proportions_comparison(vals1[1], vals1[0], vals2[1], vals2[0], min_diff, alpha)
                 pair_wise_diffs[(log_id, log_id2)] = pairwise_test_results
                 if pairwise_test_results['significant_diff']:
