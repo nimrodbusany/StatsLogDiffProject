@@ -1,0 +1,22 @@
+digraph Automaton {
+initial [shape=plaintext,label=""];
+1 [shape=circle,label=""]
+2 [shape=circle,label=""]
+3 [shape=doublecircle,label=""]
+4 [shape=circle,label=""]
+initial -> 1
+1 -> 2 [label="carSimulator.engineOn"]
+2 -> 2 [label="carSimulator.accelerate"]
+2 -> 2 [label="carSimulator.brake"]
+2 -> 1 [label="carSimulator.engineOff"]
+2 -> 4 [label="speedControl.recordSpeed"]
+4 -> 4 [label="speedControl.recordSpeed"]
+4 -> 1 [label="carSimulator.engineOff"]
+4 -> 3 [label="speedControl.disableControl"]
+4 -> 3 [label="carSiumlator.accelerate"]
+4 -> 3 [label="carSimulator.brake"]
+3 -> 1 [label="carSimulator.engineOff"]
+3 -> 3 [label="carSimulator.brake"]
+3 -> 3 [label="carSimulator.accelerate"]
+3 -> 4 [label="speedControl.recordSpeed"]
+3 -> 4 [label="speedControl.enableControl"]

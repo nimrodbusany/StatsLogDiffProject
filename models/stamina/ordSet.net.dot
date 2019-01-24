@@ -1,0 +1,23 @@
+digraph Automaton {
+initial [shape=circle,label=""];
+1 [shape=circle,label=""];
+2 [shape=circle,label=""];
+3 [shape=circle,label=""];
+4 [shape=circle,label=""];
+5 [shape=circle,label=""];
+6 [shape=doublecircle,label=""];
+initial -> 1;
+1 -> 2 [label="OrdSet"];
+2 -> 2 [label="remove_1"];
+2 -> 3 [label="operator_3"];
+3 -> 2 [label="remove_2"];
+3 -> 3 [label="remove_3"];
+3 -> 3 [label="operator_1"];
+3 -> 4 [label="operator_2"];
+4 -> 3 [label="remove_4"];
+4 -> 4 [label="operator_4"];
+4 -> 4 [label="remove_5"];
+4 -> 5 [label="operator_5"];
+5 -> 6 [label="[_resized_times_larger_max_acepted_resizes]"];
+5 -> 3 [label="[_resized_times_smaller_max_accepted_resizes]"];
+}

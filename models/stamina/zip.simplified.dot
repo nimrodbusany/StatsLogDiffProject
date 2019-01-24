@@ -1,0 +1,12 @@
+digraph Automaton {
+initial [shape=box,label="0"];
+1 [shape=circle,label="0"]
+2 [shape=circle,label="2"]
+3 [shape=circle,label="3"]
+4 [shape=doublecircle,label="4"]
+initial -> 1
+1 -> 2 [label="init"]
+2 -> 3 [label="putNextEntry"]
+2 -> 4 [label="close"]
+3 -> 4 [label="close"]
+}

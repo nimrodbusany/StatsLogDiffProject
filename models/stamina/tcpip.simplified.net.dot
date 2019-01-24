@@ -1,0 +1,36 @@
+digraph Automaton {
+initial [shape=box,label="0"];
+1 [shape=doublecircle,label="1"];
+2 [shape=circle,label="2"];
+3 [shape=circle,label="3"];
+4 [shape=circle,label="4"];
+5 [shape=circle,label="5"];
+6 [shape=circle,label="6"];
+7 [shape=circle,label="7"];
+8 [shape=circle,label="8"];
+9 [shape=circle,label="9"];
+10 [shape=circle,label="10"];
+11 [shape=circle,label="11"];
+12 [shape=circle,label="12"];
+initial -> 2 [label="passive-open"];
+initial -> 4 [label="active-open|syn"];
+2 -> 1 [label="close"];
+2 -> 3 [label="syn|syn+ack"];
+2 -> 4 [label="syn|send"];
+3 -> 5 [label="ack"];
+3 -> 7 [label="close|fin"];
+4 -> 1 [label="close|timeout|reset"];
+4 -> 5 [label="syn+ack|ack"];
+4 -> 3 [label="syn+ack|syn"];
+5 -> 6 [label="fin|ack"];
+5 -> 7 [label="close|fin"];
+6 -> 9 [label="close|fin"];
+7 -> 8 [label="ack|fin"];
+7 -> 10 [label="ack"];
+7 -> 11 [label="ack"];
+8 -> 11 [label="ack"];
+9 -> 12 [label="ack"];
+10 -> 11 [label="ack|fin"];
+11 -> 12 [label="timeout"];
+12 -> 1 [label="close"];
+}

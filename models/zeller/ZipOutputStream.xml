@@ -1,0 +1,124 @@
+<graph id="java/util/zip/ZipOutputStream" edgedefault="directed">
+	<key id="key1" for="edge" attr.name="methodidentifiers" attr.type="string" />
+	<node id="node_4" />
+	<node id="start" />
+	<node id="node_3" />
+	<node id="node_2" />
+	<node id="node_1" />
+	<node id="TERMINAL" />
+	<edge id="e0" source="start" target="node_1">
+		<data key="key1">init</data>
+	</edge>
+	<edge id="e1-1" source="node_1" target="node_1">
+		<data key="key1">setComment</data>
+	</edge>
+	<edge id="e1-2" source="node_1" target="node_1">
+		<data key="key1">setMethod</data>
+	</edge>
+	<edge id="e1-3" source="node_1" target="node_1">
+		<data key="key1">setLevel</data>
+	</edge>
+	<edge id="e1-4" source="node_1" target="node_1">
+		<data key="key1">flush</data>
+	</edge>
+	<edge id="e1-5" source="node_1" target="node_1">
+		<data key="key1">closeEntry</data>
+	</edge>
+
+	<edge id="e2" source="node_1" target="node_2">
+		<data key="key1">putNextEntry</data>
+	</edge>
+	<edge id="e3-1" source="node_1" target="TERMINAL">
+		<data key="key1">close</data>
+	</edge>
+	<edge id="e3-2" source="node_1" target="TERMINAL">
+		<data key="key1">finish</data>
+	</edge>
+	<edge id="e3-3" source="node_1" target="TERMINAL">
+		<data key="key1">write</data>
+	</edge>
+
+	<edge id="e4-1" source="node_2" target="node_2">
+		<data key="key1">setComment</data>
+	</edge>
+	<edge id="e4-2" source="node_2" target="node_2">
+		<data key="key1">setMethod</data>
+	</edge>
+	<edge id="e4-3" source="node_2" target="node_2">
+		<data key="key1">setLevel</data>
+	</edge>
+	<edge id="e4-4" source="node_2" target="node_2">
+		<data key="key1">write</data>
+	</edge>
+	<edge id="e4-5" source="node_2" target="node_2">
+		<data key="key1">putNextEntry</data>
+	</edge>
+	<edge id="e4-6" source="node_2" target="node_2">
+		<data key="key1">flush</data>
+	</edge>
+
+
+	<edge id="e5-1" source="node_2" target="node_3">
+		<data key="key1">finish</data>
+	</edge>
+	<edge id="e5-2" source="node_2" target="node_3">
+		<data key="key1">closeEntry</data>
+	</edge>
+	<edge id="e6" source="node_2" target="node_4">
+		<data key="key1">close</data>
+	</edge>
+	<edge id="e7-1" source="node_3" target="node_3">
+		<data key="key1">finish</data>
+	</edge>
+	<edge id="e7-2" source="node_3" target="node_3">
+		<data key="key1">setComment</data>
+	</edge>
+	<edge id="e7-3" source="node_3" target="node_3">
+		<data key="key1">setMethod</data>
+	</edge>
+	<edge id="e7-4" source="node_3" target="node_3">
+		<data key="key1">setLevel</data>
+	</edge>
+	<edge id="e7-5" source="node_3" target="node_3">
+		<data key="key1">flush</data>
+	</edge>
+	<edge id="e7-6" source="node_3" target="node_3">
+		<data key="key1">closeEntry</data>
+	</edge>
+
+
+	<edge id="e8" source="node_3" target="node_2">
+		<data key="key1">putNextEntry</data>
+	</edge>
+	<edge id="e9" source="node_3" target="node_4">
+		<data key="key1">close</data>
+	</edge>
+	<edge id="e10" source="node_3" target="TERMINAL">
+		<data key="key1">write</data>
+	</edge>
+	<edge id="e11-1" source="node_4" target="node_4">
+		<data key="key1">setComment</data>
+	</edge>
+	<edge id="e11-2" source="node_4" target="node_4">
+		<data key="key1">setMethod</data>
+	</edge>
+	<edge id="e11-3" source="node_4" target="node_4">
+		<data key="key1">setLevel</data>
+	</edge>
+	<edge id="e11-4" source="node_4" target="node_4">
+		<data key="key1">close</data>
+	</edge>
+	<edge id="e11-5" source="node_4" target="node_4">
+		<data key="key1">flush</data>
+	</edge>
+	<edge id="e12-1" source="node_4" target="TERMINAL">
+		<data key="key1">finish</data>
+	</edge>
+	<edge id="e12-2" source="node_4" target="TERMINAL">
+		<data key="key1">write</data>
+	</edge>
+	<edge id="e12-3" source="node_4" target="TERMINAL">
+		<data key="key1">putNextEntry</data>
+	</edge>
+</graph>
+

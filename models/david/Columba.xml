@@ -1,0 +1,72 @@
+<simulation>
+  <startnode>0</startnode>
+  <nodes>
+    <node name="0">
+      <gotos>
+        <goto prob="1" out="A:c1:c1=1">1</goto>
+      </gotos>
+    </node>
+    <node name="1">
+      <gotos>
+        <goto prob="1" out="B:c1:c1=1">2</goto>
+      </gotos>
+    </node>
+    <node name="2">
+      <gotos>
+        <goto prob="0.5" out="C:c2:c2=1">3</goto>
+      	<goto prob="0.5" out="C:c2:c2=0">4</goto>
+      </gotos>
+    </node>
+    <node name="3">
+      <gotos>
+      	<goto prob="0.9" out="D:c2:c2=1">TERMINAL</goto>
+        <goto prob="0.1" out="D:c2:c2=1">0</goto>
+      </gotos>
+    </node>
+    <node name="4">
+      <gotos>
+        <goto prob="1" out="E:c2:c2=1">5</goto>
+      </gotos>
+    </node>
+    <node name="5">
+      <gotos>
+        <goto prob="0.2" out="F:c2:c2=1">6</goto>
+        <goto prob="0.8" out="I::">8</goto>
+      </gotos>
+    </node>
+    <node name="6">
+      <gotos>
+      	<goto prob="0.5" out="G:c2:c2=1">5</goto>
+      	<goto prob="0.5" out="G:c2:c2=1">7</goto>
+      </gotos>
+    </node>
+    <node name="7">
+      <gotos>
+        <goto prob="1" out="H:c2,c3:c2=1,c3=1">5</goto>
+       </gotos>
+    </node>
+    <node name="8">
+      <gotos>
+        <goto prob="1" out="J::">9</goto>
+      </gotos>
+    </node>
+    <node name="9">
+      <gotos>
+        <goto prob="1" out="D::">10</goto>
+      </gotos>
+    </node>
+    <node name="10">
+      <gotos>
+        <goto prob="0.5" out="K:c4:c4=1">11</goto>
+        <goto prob="0.5" out="L:c4:c4=0">11</goto>
+      </gotos>
+    </node>    
+    <node name="11">
+      <gotos>
+        <goto prob="0.1" out="M::">0</goto>        
+        <goto prob="0.9" out="M::">TERMINAL</goto>
+      </gotos>
+    </node>
+    <node name="TERMINAL"/>
+  </nodes>
+</simulation>

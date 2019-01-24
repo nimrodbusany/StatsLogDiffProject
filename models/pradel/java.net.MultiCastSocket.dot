@@ -1,0 +1,43 @@
+digraph Automaton {
+  0 [shape=circle,label=""];
+  0 -> 0 [label="java.net.MulticastSocket.getInterface",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.setTimeToLive",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.send",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.setNetworkInterface",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.getNetworkInterface",style="setlinewidth(1)",color=gray]
+  0 -> 4 [label="java.net.MulticastSocket.joinGroup",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.setLoopbackMode",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.setInterface",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.getLoopbackMode",style="setlinewidth(1)",color=gray]
+  0 -> 0 [label="java.net.MulticastSocket.getTimeToLive",style="setlinewidth(1)",color=gray]
+  0 -> 3 [label="java.net.MulticastSocket.close",style="setlinewidth(1)",color=gray]
+  1 [shape=circle,label=""];
+  1 -> 1 [label="java.net.MulticastSocket.getInterface",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.setTimeToLive",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.send",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.setNetworkInterface",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.getNetworkInterface",style="setlinewidth(1)",color=gray]
+  1 -> 4 [label="java.net.MulticastSocket.joinGroup",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.setLoopbackMode",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.leaveGroup",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.setInterface",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.getLoopbackMode",style="setlinewidth(1)",color=gray]
+  1 -> 1 [label="java.net.MulticastSocket.getTimeToLive",style="setlinewidth(1)",color=gray]
+  1 -> 3 [label="java.net.MulticastSocket.close",style="setlinewidth(1)",color=gray]
+  2 [shape=circle,label=""];
+  initial [shape=plaintext,label=""];
+  initial -> 2
+  2 -> 0 [label="java.net.MulticastSocket.init",style="setlinewidth(1)",color=gray]
+  3 [shape=doublecircle,label=""];
+  3 -> 3 [label="java.net.MulticastSocket.isClosed",style="setlinewidth(1)",color=gray]
+  4 [shape=circle,label=""];
+  4 -> 4 [label="java.net.MulticastSocket.setTimeToLive",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.send",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.receive",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.joinGroup",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.setLoopbackMode",style="setlinewidth(1)",color=gray]
+  4 -> 1 [label="java.net.MulticastSocket.leaveGroup",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.getLoopbackMode",style="setlinewidth(1)",color=gray]
+  4 -> 4 [label="java.net.MulticastSocket.getTimeToLive",style="setlinewidth(1)",color=gray]
+  4 -> 3 [label="java.net.MulticastSocket.close",style="setlinewidth(1)",color=gray]
+}
