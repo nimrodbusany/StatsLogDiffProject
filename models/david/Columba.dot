@@ -1,0 +1,32 @@
+strict digraph  {
+0 [label=0, attr="{}", shape=circle];
+1 [label=1, attr="{}", shape=circle];
+2 [label=2, attr="{}", shape=circle];
+3 [label=3, attr="{}", shape=circle];
+4 [label=4, attr="{}", shape=circle];
+5 [label=5, attr="{}", shape=circle];
+6 [label=6, attr="{}", shape=circle];
+7 [label=7, attr="{}", shape=circle];
+8 [label=8, attr="{}", shape=circle];
+9 [label=9, attr="{}", shape=circle];
+10 [label=10, attr="{}", shape=circle];
+11 [label=11, attr="{}", shape=circle];
+TERMINAL [label=TERMINAL, attr="{}", shape=circle];
+0 -> 1  [label="A:c1:c1=1", prob=1];
+1 -> 2  [label="B:c1:c1=1", prob=1];
+2 -> 3  [label="C:c2:c2=1", prob="0.5"];
+2 -> 4  [label="C:c2:c2=0", prob="0.5"];
+3 -> TERMINAL  [label="D:c2:c2=1", prob="0.9"];
+3 -> 0  [label="D:c2:c2=1", prob="0.1"];
+4 -> 5  [label="E:c2:c2=1", prob=1];
+5 -> 6  [label="F:c2:c2=1", prob="0.2"];
+5 -> 8  [label="I::", prob="0.8"];
+6 -> 5  [label="G:c2:c2=1", prob="0.5"];
+6 -> 7  [label="G:c2:c2=1", prob="0.5"];
+7 -> 5  [label="H:c2,c3:c2=1,c3=1", prob=1];
+8 -> 9  [label="J::", prob=1];
+9 -> 10  [label="D::", prob=1];
+10 -> 11  [label="L:c4:c4=0", prob="0.5"];
+11 -> 0  [label="M::", prob="0.1"];
+11 -> TERMINAL  [label="M::", prob="0.9"];
+}

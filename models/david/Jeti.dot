@@ -1,0 +1,32 @@
+digraph  {
+0 [label=0, attr="{}", shape=circle];
+1 [label=1, attr="{}", shape=circle];
+2 [label=2, attr="{}", shape=circle];
+3 [label=3, attr="{}", shape=circle];
+4 [label=4, attr="{}", shape=circle];
+5 [label=5, attr="{}", shape=circle];
+6 [label=6, attr="{}", shape=circle];
+7 [label=7, attr="{}", shape=circle];
+8 [label=8, attr="{}", shape=circle];
+9 [label=9, attr="{}", shape=circle];
+10 [label=10, attr="{}", shape=circle];
+TERMINAL [label=TERMINAL, attr="{}", shape=doublecircle];
+0 -> TERMINAL  [label="A:c1:c1=1", prob="0.45"];
+0 -> 0  [label="A:c1:c1=1", prob="0.05"];
+0 -> 1  [label="A:c1:c1=0", prob="0.5"];
+1 -> 2  [label="B:c1,c2:c1=0,c2=1", prob="0.5"];
+1 -> 4  [label="E:c1,c2:c1=0,c2=0", prob="0.5"];
+2 -> 3  [label="C:c1,c2:c1=0,c2=1", prob=1];
+3 -> TERMINAL  [label="D:c1,c2:c1=0,c2=1", prob="0.9"];
+3 -> 0  [label="D:c1,c2:c1=0,c2=1", prob="0.1"];
+4 -> 5  [label="E:c1,c2:c1=0,c2=0", prob=1];
+5 -> 6  [label="G:c1,c2:c1=0,c2=0", prob=1];
+6 -> 7  [label="H:c1,c2:c1=0,c2=0", prob=1];
+7 -> 8  [label="I:c1,c2,c3:c1=0,c2=0,c3=1", prob="0.33"];
+7 -> 9  [label="L:c1,c2,c4:c1=0,c2=0,c4=0", prob="0.33"];
+7 -> 10  [label="L:c1,c2,c4:c1=0,c2=0,c4=1", prob="0.33"];
+8 -> 9  [label="J:c1,c2,c3:c1=0,c2=0,c3=1", prob=1];
+9 -> TERMINAL  [label="K:c1,c2:c1=0,c2=0", prob="0.9"];
+9 -> 0  [label="K:c1,c2:c1=0,c2=0", prob="0.1"];
+10 -> 9  [label="L:c1,c2,c4:c1=0,c2=0,c4=1", prob=1];
+}

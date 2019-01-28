@@ -1,0 +1,29 @@
+digraph  {
+0 [label=0, shape=box];
+1 [label=1, shape=circle];
+2 [label=2, shape=circle];
+3 [label=3, shape=circle];
+4 [label=4, shape=circle];
+5 [label=5, shape=circle];
+6 [label=6, shape=circle];
+7 [label=7, shape=circle];
+8 [label=8, shape=circle];
+9 [label=9, shape=circle];
+10 [label=10, shape=circle];
+TERMINAL [label=TERMINAL, shape=doublecircle];
+0 -> TERMINAL  [label="A:c1:c1=1", transition_probability="1/10"];
+0 -> 1  [label="A:c1:c1=0", transition_probability="9/10"];
+1 -> 2  [label="B:c1,c2:c1=0,c2=1", transition_probability="1/2"];
+1 -> 4  [label="E:c1,c2:c1=0,c2=0", transition_probability="1/2"];
+2 -> 3  [label="C:c1,c2:c1=0,c2=1", transition_probability="1"];
+3 -> TERMINAL  [label="D:c1,c2:c1=0,c2=1", transition_probability="1"];
+4 -> 5  [label="E:c1,c2:c1=0,c2=0", transition_probability="1"];
+5 -> 6  [label="G:c1,c2:c1=0,c2=0", transition_probability="1"];
+6 -> 7  [label="H:c1,c2:c1=0,c2=0", transition_probability="1"];
+7 -> 8  [label="I:c1,c2,c3:c1=0,c2=0,c3=1", transition_probability="1/3"];
+7 -> 9  [label="L:c1,c2,c4:c1=0,c2=0,c4=0", transition_probability="1/3"];
+7 -> 10  [label="L:c1,c2,c4:c1=0,c2=0,c4=1", transition_probability="1/3"];
+8 -> 9  [label="J:c1,c2,c3:c1=0,c2=0,c3=1", transition_probability="1"];
+9 -> TERMINAL  [label="K:c1,c2:c1=0,c2=0", transition_probability="1"];
+10 -> 9  [label="L:c1,c2,c4:c1=0,c2=0,c4=1", transition_probability="1"];
+}

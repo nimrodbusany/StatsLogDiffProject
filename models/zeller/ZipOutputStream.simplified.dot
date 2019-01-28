@@ -1,0 +1,16 @@
+digraph  {
+4 [label=4, shape=circle];
+start [label=start, shape=box];
+3 [label=3, shape=circle];
+2 [label=2, shape=circle];
+1 [label=1, shape=circle];
+TERMINAL [label=TERMINAL, shape=doublecircle];
+4 -> TERMINAL  [label=putNextEntry];
+start -> 1  [label=init];
+3 -> 4  [label=close];
+3 -> TERMINAL  [label=write];
+2 -> 3  [label=closeEntry];
+2 -> 4  [label=close];
+1 -> 2  [label=putNextEntry];
+1 -> TERMINAL  [label=write];
+}

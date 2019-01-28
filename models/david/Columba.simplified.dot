@@ -1,0 +1,30 @@
+strict digraph  {
+0 [label=0, shape=box];
+1 [label=1, shape=circle];
+2 [label=2, shape=circle];
+3 [label=3, shape=circle];
+4 [label=4, shape=circle];
+5 [label=5, shape=circle];
+6 [label=6, shape=circle];
+7 [label=7, shape=circle];
+8 [label=8, shape=circle];
+9 [label=9, shape=circle];
+10 [label=10, shape=circle];
+11 [label=11, shape=circle];
+TERMINAL [label=TERMINAL, shape=doublecircle];
+0 -> 1  [label="A:c1:c1=1", transition_probability="1"];
+1 -> 2  [label="B:c1:c1=1", transition_probability="1"];
+2 -> 3  [label="C:c2:c2=1", transition_probability="1/2"];
+2 -> 4  [label="C:c2:c2=0", transition_probability="1/2"];
+3 -> TERMINAL  [label="D:c2:c2=1", transition_probability="1"];
+4 -> 5  [label="E:c2:c2=1", transition_probability="1"];
+5 -> 6  [label="F:c2:c2=1", transition_probability="1/5"];
+5 -> 8  [label="I::", transition_probability="4/5"];
+6 -> 8  [label="G:c2:c2=1", transition_probability="1/2"];
+6 -> 7  [label="G:c2:c2=1", transition_probability="1/2"];
+7 -> TERMINAL [label="H:c2,c3:c2=1,c3=1", transition_probability="1"];
+8 -> 9  [label="J::", transition_probability="1"];
+9 -> 10  [label="D::", transition_probability="1"];
+10 -> 11  [label="L:c4:c4=0", transition_probability="1"];
+11 -> TERMINAL  [label="M::", transition_probability="1"];
+}

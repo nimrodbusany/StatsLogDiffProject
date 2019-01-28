@@ -1,0 +1,21 @@
+digraph  {
+node_4 [label=node_4, attr="{}", shape=circle];
+start [label=start, attr="{}", shape=box];
+node_3 [label=node_3, attr="{}", shape=circle];
+node_2 [label=node_2, attr="{}", shape=circle];
+node_1 [label=node_1, attr="{}", shape=circle];
+TERMINAL [label=TERMINAL, attr="{}", shape=doublecircle];
+node_4 -> node_4  [label=flush];
+node_4 -> TERMINAL  [label=putNextEntry];
+start -> node_1  [label=init];
+node_3 -> node_3  [label=closeEntry];
+node_3 -> node_2  [label=putNextEntry];
+node_3 -> node_4  [label=close];
+node_3 -> TERMINAL  [label=write];
+node_2 -> node_2  [label=flush];
+node_2 -> node_3  [label=closeEntry];
+node_2 -> node_4  [label=close];
+node_1 -> node_1  [label=closeEntry];
+node_1 -> node_2  [label=putNextEntry];
+node_1 -> TERMINAL  [label=write];
+}
