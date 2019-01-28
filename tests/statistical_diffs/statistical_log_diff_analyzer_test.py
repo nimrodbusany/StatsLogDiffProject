@@ -1,7 +1,7 @@
 import unittest
 
 import src.statistical_diffs.statistical_log_diff_analyzer as sld
-from models.model_based_log_generator import LogGeneator
+from models.model_based_log_generator import LogGenerator
 
 __VERBOSE__ = True
 
@@ -16,7 +16,7 @@ class Test_DGraph(unittest.TestCase):
         alpha = 0.05
         bias = 0.2
         k = 2
-        log1, log2 = LogGeneator.produce_toy_logs(bias, 1000)
+        log1, log2 = LogGenerator.produce_toy_logs(bias, 1000)
         alg = sld.SLPDAnalyzer(log1, log2)
         diffs = alg.find_statistical_diffs(k, min_diff, alpha)
         diffs.sort()
@@ -33,7 +33,7 @@ class Test_DGraph(unittest.TestCase):
         alpha = 0.05
         bias = 0.0
         k = 2
-        log1, log2 = LogGeneator.produce_toy_logs(bias, 1000)
+        log1, log2 = LogGenerator.produce_toy_logs(bias, 1000)
         alg = sld.SLPDAnalyzer(log1, log2)
         diffs = alg.find_statistical_diffs(k, min_diff, alpha)
         self.assertTrue(len(diffs) == 0, 'no statstical diffs are expected')
