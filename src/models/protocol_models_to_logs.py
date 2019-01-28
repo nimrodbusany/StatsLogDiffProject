@@ -2,7 +2,7 @@ from src.graphs.graphs import DGraph
 import random
 import networkx as nx
 import os
-from model_based_log_generator import LogGeneator
+from model_based_log_generator import LogGenerator
 from log_writer import LogWriter
 from logs_parsers.simple_log_parser import SimpleLogParser
 import numpy as np
@@ -106,8 +106,8 @@ def produce_logs_from_stamina(traces2produce):
         for instance_id in range(MODEL_TO_PRODUCE):
             print('processing instance:', instance_id, model_path)
             model_generator = ProtocolModel(model_path, instance_id)
-            log = LogGeneator.produce_log_from_model(model_generator.graph,
-                                                     transition_probability_attribute=TRANSITION_PROBABILITY_ATTRIBUTE, traces2produce=traces2produce)
+            log = LogGenerator.produce_log_from_model(model_generator.graph,
+                                                      transition_probability_attribute=TRANSITION_PROBABILITY_ATTRIBUTE, traces2produce=traces2produce)
             model_generator.write_transitions_probabilities(dir_)
             LogWriter.write_log(log, dir_ + 'l' + str(instance_id) + ".log")
 
@@ -137,9 +137,9 @@ def produce_logs_from_david(traces2produce):
             #     transition_probs[e] = float(Fraction(transition_probs[e].strip("\"")))
             # nx.set_edge_attributes(model_generator.graph.dgraph, transition_probs, TRANSITION_PROBABILITY_ATTRIBUTE)
 
-            log = LogGeneator.produce_log_from_model(model_generator.graph,
-                                                     transition_probability_attribute=TRANSITION_PROBABILITY_ATTRIBUTE,
-                                                     traces2produce=traces2produce)
+            log = LogGenerator.produce_log_from_model(model_generator.graph,
+                                                      transition_probability_attribute=TRANSITION_PROBABILITY_ATTRIBUTE,
+                                                      traces2produce=traces2produce)
             model_generator.write_transitions_probabilities(dir_)
             LogWriter.write_log(log, dir_ + 'l' + str(instance_id) + ".log")
 

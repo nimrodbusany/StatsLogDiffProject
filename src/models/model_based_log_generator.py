@@ -3,7 +3,7 @@ from src.main.config import RESULTS_PATH
 import numpy as np
 from networkx.drawing.nx_agraph import write_dot
 
-class LogGeneator:
+class LogGenerator:
 
     @classmethod
     def _generate_single_split_model(cls, split_bias_probability=0.0):
@@ -151,7 +151,7 @@ class LogGeneator:
     def produce_log_from_model(model, traces2produce=1000, transition_probability_attribute='prob'):
         log = []
         for i in range(traces2produce):
-            trace = LogGeneator._generate_trace(model, edge_prob_attribute=transition_probability_attribute)
+            trace = LogGenerator._generate_trace(model, edge_prob_attribute=transition_probability_attribute)
             log.append(trace)
         return log
 
@@ -159,11 +159,11 @@ class LogGeneator:
 
 if __name__ == '__main__':
 
-    l1, l2 = LogGeneator.produce_toy_logs()
-    g = LogGeneator.generate_single_split_model()
+    l1, l2 = LogGenerator.produce_toy_logs()
+    g = LogGenerator.generate_single_split_model()
     g.write_dot(RESULTS_PATH + '/exmaple_1.dot', True)
     ks_dict = {}
     for i in range(100):
-        t = tuple(LogGeneator.generate_trace(g))
+        t = tuple(LogGenerator.generate_trace(g))
         ks_dict[t] = ks_dict.get(t, 0) + 1
     print (ks_dict)

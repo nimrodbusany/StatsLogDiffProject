@@ -8,7 +8,7 @@ from paired_experiment_results import Experiment_Result
 from log_sampler import sample_traces
 from log_based_mle import compute_mle_k_future_dict
 from simple_log_parser import SimpleLogParser
-from models.model_based_log_generator import LogGeneator
+from models.model_based_log_generator import LogGenerator
 from input_configs import get_models_location
 
 def get_logs(experiment_type, out_folder, bias=0.1, full_log_size=1000):
@@ -31,12 +31,12 @@ def get_logs(experiment_type, out_folder, bias=0.1, full_log_size=1000):
         return mozilla4_traces, mozilla5_traces, experiment_name, out_folder + 'bear_pairwise/'
 
     if experiment_type == 2:
-        log1 = LogGeneator.produce_log_from_single_split_models(0.0, full_log_size)
-        log2 = LogGeneator.produce_log_from_single_split_models(bias, full_log_size)
+        log1 = LogGenerator.produce_log_from_single_split_models(0.0, full_log_size)
+        log2 = LogGenerator.produce_log_from_single_split_models(bias, full_log_size)
         return log1, log2, 'syn, single_split', out_folder + 'syn_pairwise/'
 
     if experiment_type == 3:
-        log1, log2 = LogGeneator.produce_toy_logs(bias, full_log_size)
+        log1, log2 = LogGenerator.produce_toy_logs(bias, full_log_size)
         return log1, log2, 'syn, toy', out_folder + 'syn_pairwise/'
 
     raise ValueError("experiment type: [0, 1]")

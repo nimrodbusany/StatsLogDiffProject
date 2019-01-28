@@ -8,7 +8,7 @@ from multi_log_experiment_results import Experiment_Result
 from log_sampler import sample_traces
 from log_based_mle import compute_mle_k_future_dict
 from simple_log_parser import SimpleLogParser
-from models.model_based_log_generator import LogGeneator
+from models.model_based_log_generator import LogGenerator
 from input_configs import get_models_location
 
 def get_logs(experiment_type, out_folder, full_log_size= 1000, biases = [0, 0.1, 0.1]):
@@ -46,12 +46,12 @@ def get_logs(experiment_type, out_folder, full_log_size= 1000, biases = [0, 0.1,
 
     if experiment_type == 2:
         for bias in biases:
-            logs.append(LogGeneator.produce_log_from_single_split_models(bias, full_log_size))
+            logs.append(LogGenerator.produce_log_from_single_split_models(bias, full_log_size))
         return logs, 'syn, single_split', out_folder + 'syn_multiple_logs/'
 
     if experiment_type == 3:
         for bias in biases:
-            logs.append(LogGeneator.produce_toy_logs(bias, full_log_size)[1])
+            logs.append(LogGenerator.produce_toy_logs(bias, full_log_size)[1])
         return logs, 'syn, toy', out_folder + 'syn_multiple_logs2/'
 
 
