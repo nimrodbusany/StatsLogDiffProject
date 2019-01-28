@@ -1,0 +1,21 @@
+{
+    "logs": [
+        {
+            "id": "log1",
+            "path": "C:/stats_diff/Heretix/l0.log"
+        },
+        {
+            "id": "log2",
+            "path": "C:/stats_diff/Heretix/l1.log"
+        },
+        {
+            "id": "log3",
+            "path": "C:/stats_diff/Heretix/l2.log"
+        },
+        {
+            "id": "log4",
+            "path": "C:/stats_diff/Heretix/l3.log"
+        }
+    ],
+    "output_dir": "C:/stats_diff/Results/"
+}
