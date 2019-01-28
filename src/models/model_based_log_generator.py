@@ -41,8 +41,14 @@ class LogGeneator:
         :param probabilities: a list of probabilities per elements (must sum to 1); assumed uniformed of non is provided
         :return: element from the list
         '''
-        if sum(probabilities) != 1:
-            raise AssertionError('probabilities must some to 1.0')
+        if abs(1 - sum(probabilities)) > 0.001:
+            raise AssertionError('probabilities must some to 1.0, but sum to '+ str(sum(probabilities) + ' values: ' + str(probabilities)))
+        if min(probabilities) < 0:
+            if min(probabilities) < -0.001:
+                raise AssertionError('probabilities must non negative: ' + str(probabilities))
+            else:
+                for i in range(probabilities):
+                    probabilities[i] = 0
         N = len(elements)
         if not probabilities:
             probabilities = []
