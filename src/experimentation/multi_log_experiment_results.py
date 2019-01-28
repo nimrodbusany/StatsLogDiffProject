@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 import src.statistical_diffs.statistical_log_diff_analyzer as sld
+import src.statistical_diffs.hypothesis_testing
 from hypothesis_testing import is_significant_by_multiple_proportions_test
 
 

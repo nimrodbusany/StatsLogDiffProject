@@ -2,10 +2,11 @@
 import sys, getopt
 import json
 import os
-
-from simple_log_parser import SimpleLogParser
-import src.statistical_diffs.statistical_log_diff_analyzer as snk
-import src.statistical_diffs.statistical_log_diff_analyzer as s2k
+import sys
+import import_organizer
+from src.logs_parsers.simple_log_parser import SimpleLogParser
+from src.statistical_diffs.statistical_log_diff_analyzer import MultipleSLPDAnalyzer
+from src.statistical_diffs.statistical_log_diff_analyzer import SLPDAnalyzer
 import pandas as pd
 
 
@@ -101,7 +102,7 @@ def run(log_paths, output_dir, alpha, delta, k):
     logs_ids = list(logs.keys())
 
     logs_arr = list(logs.values())
-    alg = snk.MultipleSLPDAnalyzer(logs_arr) if len(logs) > 2 else s2k.SLPDAnalyzer(logs_arr[0], logs_arr[1])
+    alg = MultipleSLPDAnalyzer(logs_arr) if len(logs) > 2 else SLPDAnalyzer(logs_arr[0], logs_arr[1])
     diffs = alg.find_statistical_diffs(k, delta, alpha)
     vals = "_".join(['k_' + str(k), 'd_' + str(delta), 'al_' + str(alpha)])
     keys = list(diffs[list(diffs.keys())[0]].keys())
