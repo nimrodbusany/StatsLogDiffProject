@@ -11,8 +11,8 @@ Then, edit and run the statistical_log_differencing.bat file, after setting:
 - -d (the minimal difference that is used by the statistical test to consider a difference as interesting), default, 0.05 
 - -k k-Tails k parameter, default, 2
 
-- Example logs can be found in StatsLogDiffProject/data/logs/logs.zip. 
-- Example json files configs.json appear in the main folder (input_config_s2kdiff.json, input_config_snkdiff.json).
+Example logs can be found in StatsLogDiffProject/data/logs/logs.zip. 
+Example json files configs.json appear in the main folder (input_config_s2kdiff.json, input_config_snkdiff.json).
 
 If the config file includes 2 logs then 2sKDiff is run, if more, snKDiff is run.
 
