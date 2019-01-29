@@ -7,7 +7,10 @@ import import_organizer
 from src.logs_parsers.simple_log_parser import SimpleLogParser
 from src.statistical_diffs.statistical_log_diff_analyzer import MultipleSLPDAnalyzer
 from src.statistical_diffs.statistical_log_diff_analyzer import SLPDAnalyzer
+from src.graphs.diff_graph_export import *
+from ktails import ktails, write2file
 import pandas as pd
+import numpy as np
 
 
 def process_input_files(argv):
@@ -108,13 +111,46 @@ def run(log_paths, output_dir, alpha, delta, k):
     keys = list(diffs[list(diffs.keys())[0]].keys())
     keys.extend(['source', 'target'])
     df = pd.DataFrame(columns=keys)
+    sig_diffs = []
+    sign_id_tag = 'different_ids' if len(logs)> 2 else 'significant_diff'
     for diff in diffs:
         item = diffs[diff].copy()
         handle_multiple_logs_mapping(diffs[diff], logs_ids)
         item['source'] = diff[0]
         item['target'] = diff[1]
+        if item[sign_id_tag]:
+            sig_diffs.append(item)
         df = df.append(item, ignore_index=True)
-    df.to_csv(output_dir + 'results' + "_" + vals + '_diffs' + '.csv')
+
+    df = df.sort_values(by='statistic', ascending=False)
+    df.to_csv(output_dir + 'results' + "_" + vals + '_diffs' + '.csv', index=False)
+    overlay_diffs_over_graphs(k, logs, sig_diffs, output_dir)
+
+
+
+def overlay_diffs_over_graphs(k, logs, sig_diffs, output_dir):
+
+    if len(logs) < 2:
+        raise ValueError("Please include at least two logs")
+
+    if len(logs) > 2:
+        single_log = []
+        for log in logs:
+            single_log.extend(logs[log])
+        ftr2ftrs, states2transitions2traces, g = ktails(single_log, k, add_dummy_init=False,
+                                                            add_dummy_terminal=False)
+        g = overlay_differences_over_single_graph(g,  sig_diffs)
+        write2file(g, output_dir + 'graph_nkdiff' + '.dot')
+    else:
+        log_names = list(logs.keys())
+        for i in range(2):
+            ftr2ftrs, states2transitions2traces, g = ktails(logs[log_names[i]], k, add_dummy_init=False, add_dummy_terminal=False)
+            g = overlay_differences_over_single_graph(g, sig_diffs)
+            write2file(g, output_dir + 'graph_2kdiff_' + log_names[i] + '.dot')
+
+
+
+
 
 def main(argv):
 

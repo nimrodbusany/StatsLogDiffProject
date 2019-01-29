@@ -1,7 +1,7 @@
 import itertools
 import os
 import pandas as pd
-
+import numpy as np
 import src.statistical_diffs.statistical_log_diff_analyzer as sld
 from bear_log_parser import *
 from paired_experiment_results import Experiment_Result
@@ -10,6 +10,7 @@ from log_based_mle import compute_mle_k_future_dict
 from simple_log_parser import SimpleLogParser
 from models.model_based_log_generator import LogGenerator
 from input_configs import get_models_location
+
 
 def get_logs(experiment_type, out_folder, bias=0.1, full_log_size=1000):
     if experiment_type == 0:
@@ -176,8 +177,8 @@ def model_based_experiments(ks, min_diffs, alphas, traces_to_sample,  results_fo
                             item['true_diff'] = abs(item['true_m1'] - item['true_m0'])
                             item['statstical_success'] = 'ERR'
                             if not item['significant_diff']:
-                                if item['pval'] == 'NA':
-                                    item['statstical_success'] = 'NA'
+                                if item['pvalue'] == np.nan:
+                                    item['statstical_success'] = np.nan
                                 elif item['true_diff'] > min_diff:
                                     item['statstical_success'] = False
                                 elif item['true_diff'] < min_diff:

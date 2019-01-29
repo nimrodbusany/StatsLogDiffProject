@@ -42,7 +42,7 @@ class Experiment_Result():
             act_diff = found_diffs.get(transition)
             if act_diff is not None:
                 significant_diff = act_diff['significant_diff']
-                if act_diff['pval']=='NND':
+                if act_diff['pvalue']=='NND':
                     not_enough_data_counter += 1
                     continue
             else:

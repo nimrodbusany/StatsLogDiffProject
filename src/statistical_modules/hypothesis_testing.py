@@ -25,7 +25,7 @@ def means_comparison(N=1000):
             count_success += 1
         if __VERBOSE__:
             print('t, df:', t, df)
-            print('p_value is:', p)
+            print('pvalue is:', p)
 
     print('success rate:', count_success / N)
 
@@ -48,16 +48,16 @@ def perform_z_test(m1, n1, m2, n2, delta, alpha):
     # if m1 < 5 or m2 < 5 or (n1 - m1) < 5 or (n1 - m1) < 5 and p1 != p2:
     #     # if n1 > 5 and n2 > 5 and m1 == m2:
     #     #     params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': p1, 'p2': p2, 'diff': abs(p1 - p2),
-    #     #               'p_hat': p_hat, 'se': se, 'z_hat': 'NA', 'pval': 'NND', 'delta': delta, 'alpha': alpha,
+    #     #               'p_hat': p_hat, 'se': se, 'statistic': 'NA', 'pvalue': 'NND', 'delta': delta, 'alpha': alpha,
     #     #               'significant_diff': test_res}
     #     params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': p1, 'p2': p2, 'diff': abs(p1 - p2),
-    #               'p_hat': p_hat, 'se': se, 'z_hat': 'NA', 'pval': 'NND', 'delta': delta, 'alpha': alpha,
+    #               'p_hat': p_hat, 'se': se, 'statistic': 'NA', 'pvalue': 'NND', 'delta': delta, 'alpha': alpha,
     #               'significant_diff': test_res}
     #     return (test_res, params)
 
     if se == 0:  ## TODO: double check if correctly handling the case of zero SE
         params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': p1, 'p2': p2, 'diff': abs(p1 - p2),
-                  'p_hat': p_hat, 'se': se, 'z_hat': 'NA', 'pval': 'NA', 'delta': delta, 'alpha': alpha,
+                  'p_hat': p_hat, 'se': se, 'statistic': np.nan, 'pvalue': np.nan, 'delta': delta, 'alpha': alpha,
                   'significant_diff': test_res}
 
         return (test_res, params)
@@ -67,16 +67,16 @@ def perform_z_test(m1, n1, m2, n2, delta, alpha):
     min_val = min(p1, p2)
     max_val = max(p1, p2)
 
-    # z_hat = (min_val - max_val - delta) / se
-    # z_hat2 = (max_val - min_val - delta) / se
-    # p_v1 = stats.norm.cdf(z_hat) + 1 - stats.norm.cdf(z_hat2)
+    # statistic = (min_val - max_val - delta) / se
+    # statistic2 = (max_val - min_val - delta) / se
+    # p_v1 = stats.norm.cdf(statistic) + 1 - stats.norm.cdf(statistic2)
     actual_diff = max_val - min_val
-    z_hat = (max_val - min_val - delta) / se
-    # p_v1 = 2 * (1 - stats.norm.cdf(z_hat))
-    p_v1 = (1 - stats.norm.cdf(z_hat))
+    statistic = (max_val - min_val - delta) / se
+    # p_v1 = 2 * (1 - stats.norm.cdf(statistic))
+    p_v1 = (1 - stats.norm.cdf(statistic))
     test_res = (not (actual_diff < delta)) and p_v1 < alpha
     params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': p1, 'p2': p2, 'diff': abs(p1 - p2),
-              'p_hat': p_hat, 'se': se, 'z_hat': z_hat, 'effect_size': (abs(p1 - p2) / se), 'pval': p_v1,
+              'p_hat': p_hat, 'se': se, 'statistic': statistic, 'effect_size': (abs(p1 - p2) / se), 'pvalue': p_v1,
               'delta': delta, 'alpha': alpha, 'significant_diff': test_res}
     return (test_res, params)
 
@@ -96,7 +96,7 @@ def perform_t_test(m1, n1, m2, n2, delta,
         se = np.sqrt(p_hat * (1 - p_hat) * (1 / n1 + 1 / n2))
         params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': avg_1, 'p2': avg_2, 'diff': abs(avg_1 - avg_2),
                   'deg_fr': -1,
-                  'p_hat': p_hat, 'se': se, 't_hat': 'NA', 'pval': 'NA', 'delta': delta, 'alpha': alpha,
+                  'p_hat': p_hat, 'se': se, 't_hat': np.nan, 'pvalue': np.nan, 'delta': delta, 'alpha': alpha,
                   'significant_diff': test_res}
         return (test_res, params)
 
@@ -108,7 +108,7 @@ def perform_t_test(m1, n1, m2, n2, delta,
     if se_1 == 0 and se_2 == 0:  ## TODO: decide on the right value to return
         params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': avg_1, 'p2': avg_2, 'diff': abs(avg_1 - avg_2),
                   'deg_fr': -1,
-                  'p_hat': p_hat, 'se': se_hat, 't_hat': 'NA', 'pval': 'NA', 'delta': delta, 'alpha': alpha,
+                  'p_hat': p_hat, 'se': se_hat, 't_hat': np.nan, 'pvalue': np.nan, 'delta': delta, 'alpha': alpha,
                   'significant_diff': test_res}
         return (test_res, params)
 
@@ -130,7 +130,7 @@ def perform_t_test(m1, n1, m2, n2, delta,
 
     params = {'m1': m1, 'n1': n1, 'm2': m2, 'n2': n2, 'p1': avg_1, 'p2': avg_2, 'diff': abs(avg_1 - avg_2),
               'deg_fr': deg_fr,
-              'p_hat': p_hat, 'se': se_hat, 't_hat': val, 'pval': p_val, 'delta': delta, 'alpha': alpha,
+              'p_hat': p_hat, 'se': se_hat, 't_hat': val, 'pvalue': p_val, 'delta': delta, 'alpha': alpha,
               'significant_diff': test_res}
 
     if p_val < alpha:
@@ -161,8 +161,8 @@ def proportions_comparison_test(N=1000):
         b = np.random.choice(2, p=[0.5, 0.5], size=n2)
         p_hat = (sum(a) + sum(b)) / (n1 + n2)
         se = np.sqrt(p_hat * (1 - p_hat) * (1 / n1 + 1 / n2))
-        z_hat = (a.mean() - b.mean() - actual_diff) / se
-        p = 1 - stats.norm.cdf(z_hat)
+        statistic = (a.mean() - b.mean() - actual_diff) / se
+        p = 1 - stats.norm.cdf(statistic)
         if p < 0.05:
             count_success += 1
         cohens_h_arr.append(compute_cohens_h(a, n1, b, n2))

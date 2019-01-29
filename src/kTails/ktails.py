@@ -1,19 +1,22 @@
 import networkx as nx
 import graph_filtering
+
 from bear_log_parser import BearLogParser
 
 INIT_LABEL = '"init"'
 TERM_LABEL = '"term"'
 
-def generate_equivalent_maps(traces, k, gen_past=True):
+def generate_equivalent_maps(traces, k, gen_past=True, add_dummy_init=True, add_dummy_terminal=True):
 
     ftr2ftrs = dict()
     ftr2past = dict()
     transitions2traces = dict()
     tr_id = 0
     for t in traces:
-        t.insert(0, INIT_LABEL)
-        t.append(TERM_LABEL)
+        if add_dummy_init:
+            t.insert(0, INIT_LABEL)
+        if add_dummy_terminal:
+            t.append(TERM_LABEL)
         for i in range(len(t)):
             # if i == 0: ## do not unify futures of dummy init
             #     ftr = tuple([t[0]])
@@ -97,9 +100,9 @@ def construct_graph_from_futures(ftr2ftrs, states2transition2traces, use_traces_
         if len(ftr) == 0:
             shape = "diamond"
         if shape:
-            g.add_node(id, shape=shape)
+            g.add_node(id, shape=shape, label=ftr)
         else:
-            g.add_node(id)
+            g.add_node(id, label=ftr)
 
     ## add transitions, labels, weights
     edges_dic = {}
@@ -149,11 +152,11 @@ def normalized_transition_count_dict(transitions_count):
             raise AssertionError("transition probabilities do not add to one in future:", ftr, validation_count)
 
 
-def ktails(traces, k=2, graph_simplification=0, use_traces_as_set=False):
+def ktails(traces, k=2, graph_simplification=0, use_traces_as_set=False, add_dummy_init=True, add_dummy_terminal=True):
     ''' 0- no past simplification, 1- simplify by graph, 2 - simplify by ks '''
     ## generate equiv classes
 
-    ftr2ftrs, states2transitions2traces = generate_equivalent_maps(traces, k, False)
+    ftr2ftrs, states2transitions2traces = generate_equivalent_maps(traces, k, False, add_dummy_init, add_dummy_terminal)
     g = construct_graph_from_futures(ftr2ftrs, states2transitions2traces, use_traces_as_set=use_traces_as_set, pasts_equiv=None)
     return ftr2ftrs, states2transitions2traces, g
 
