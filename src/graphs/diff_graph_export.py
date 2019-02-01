@@ -5,12 +5,17 @@ def overlay_differences_over_single_graph(g, sig_diffs):
     colors, stats, statstics_val = {}, {}, {}
     import networkx as nx
     labels = nx.get_node_attributes(g, 'label')
+    edges = nx.edges(g)
     d = dict([(labels[l], l) for l in labels])
     for diff in sig_diffs:
         source = tuple([x.lower() for x in diff['source']])
         target = tuple([x.lower() for x in diff['target']])
+        if source not in d or target not in d:
+            continue
         src_id = d[source]
         trg_id = d[target]
+        if (src_id, trg_id) not in edges:
+            continue
         colors[(src_id, trg_id)] = 'red'
         if 'different_ids' in diff: ## handle n2KDiff results
             stats[(src_id, trg_id)] = str(diff['different_ids']) + \
