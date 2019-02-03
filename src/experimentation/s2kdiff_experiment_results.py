@@ -2,19 +2,19 @@ import numpy as np
 import pandas as pd
 
 
-class Experiment_Result():
+class S2KDiff_Experiment_Result():
 
     def __init__(self):
         self.results = None
-        self.columns = ['l1_traces', 'l2_traces', 'k', 'min_diff', 'bias', 'alpha', 'tp', 'fp', 'tn', 'fn', 'precision',
+        self.columns = ['single_instance', 'model', 'l1_traces', 'l2_traces', 'k', 'min_diff', 'bias', 'alpha', 'tp', 'fp', 'tn', 'fn', 'precision',
                    'recall', 'acc', 'true_error (tp/tn+fp)', 'power (tp/tp+fn)', 'total_transitions', 'not_enought_data']
-        self.grp_by_columns = ['l1_traces', 'l2_traces', 'k', 'min_diff', 'bias', 'alpha']
+        self.grp_by_columns = ['single_instance', 'model', 'l1_traces', 'l2_traces', 'k', 'min_diff', 'bias', 'alpha']
 
-    def add_experiment_result(self, T2Ps, k, min_diff, bias, alpha, statistical_diffs, M1, M2):
+    def add_experiment_result(self, T2Ps, k, min_diff, bias, alpha, statistical_diffs, M1, M2, experiment_name = "", single_instance=True):
         '''
             :param transitions_to_probabilities_per_log: list of dictionaries of mapping k_futures -> k_futures for each of the logs
         '''
-        new_row = [M1, M2, k, min_diff, bias, alpha]
+        new_row = [single_instance, experiment_name, M1, M2, k, min_diff, bias, alpha]
         found_diffs = statistical_diffs
         ## create a mapping of transitions to probabilities (in each of the logs)
         all_transitions = {}
@@ -69,20 +69,39 @@ class Experiment_Result():
         self.results = np.vstack([self.results, new_row]) if self.results is not None else np.array(new_row)
 
     def export_to_csv(self, path):
-        with open(path, 'wb') as f:
-            f.write(bytes(",".join(self.columns)+'\n','utf-8'))
-            np.savetxt(f, self.results, delimiter=",", fmt='%.4f')
 
-    def export_summary_to_csv(self, path):
-
-
+        import pandas as pd
         df = pd.DataFrame(data=self.results, columns=self.columns)
+        types = dict([(c, 'str') if c in ['model', 'single_instance']  else (c, 'float') for c in self.columns])
+        for t in types:
+            df[t] = df[t].astype(types[t])
+        df['total_transition'] = df['tp'] + df['tn'] + df['fp'] + df['fn']
+        df.to_csv(path, index=False, float_format='%.4f')
+
+    def export_summary_to_csv(self, path, grp_by_columns= None):
+
+        if not grp_by_columns:
+            grp_by_columns = self.grp_by_columns
+        else:
+            grp_by_columns.extend(self.grp_by_columns)
+        df = pd.DataFrame(data=self.results, columns=self.columns)
+        types = dict([(c, 'str') if c in ['model', 'single_instance'] else (c, 'float') for c in self.columns])
+        for t in types:
+            df[t] = df[t].astype(types[t])
+
         bias = df['bias']
         df = df.replace(-1, np.NaN)
         df['bias'] = bias ## TODO: resolve this ugly hack; need to add bias, since group by with NaN values break the group by
-        grps = df.groupby(self.grp_by_columns)
-        res = grps.apply(np.mean)
-        res.to_csv(path)
+        df['total_transition'] = df['tp'] + df['tn'] + df['fp'] + df['fn']
+        grps = df.groupby(grp_by_columns)
+        df_means = grps.mean()
+        df_means['parameter'] = 'mean'
+        df_std = grps.std()
+        df_std['parameter'] = 'std'
+        df_median = grps.median()
+        df_median['parameter'] = 'statistics'
+        summary = pd.concat([df_means, df_std, df_median], axis=0)
+        summary.to_csv(path)
 
     def __repr__(self):
         return str(self.results)

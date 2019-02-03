@@ -4,7 +4,7 @@ import pandas as pd
 
 import src.statistical_diffs.statistical_log_diff_analyzer as sld
 from bear_log_parser import *
-from multi_log_experiment_results import Experiment_Result
+from snkdiff_experiment_results import SNKDiff_Experiment_Result
 from log_sampler import sample_traces
 from log_based_mle import compute_mle_k_future_dict
 from simple_log_parser import SimpleLogParser
@@ -86,7 +86,7 @@ def log_based_experiments():
     biases_array = [(0,)]  # (0, 0.1, -0.1)
     for k in ks:
         for biases in biases_array:
-            experiment_results = Experiment_Result(biases)
+            experiment_results = SNKDiff_Experiment_Result(biases)
             logs, experiment_name, outpath = get_logs(EXPERIMENT_TYPE, RESULT_FODLER, full_log_size=full_log_size,
                                                       biases=biases)
             ground_truth = []
@@ -146,6 +146,8 @@ def get_models(model_id, results_base_fodler, models2fetch, K, models_group = 0)
     dir_ = LOGS_OUTPUT_PATH + dirs_[model_id] + "/"
     for j in range(models2fetch):
         ## read log
+        if j > 3:
+            j = j % 4
         log = SimpleLogParser.read_log(dir_+'l'+str(j)+'.log')
         logs.append(log)
 
@@ -180,7 +182,8 @@ def _enrich_diff_with_experiment_info(MODELS2FETCH, diff, item, min_diff, models
             item[str(ind1) + '_' + str(ind2) + '_ok'] = False
 
 
-def model_based_experiments(ks, min_diffs, alphas, traces_to_sample, models_group,  results_folder, single_instance=False, MODELS2FETCH = 4, repetitions= 10):
+def run_model_based_experiments(ks, min_diffs, alphas, traces_to_sample, experiment_results, results_folder, \
+                                models_group, single_instance=False, models_to_fetch_arr = [4], repetitions= 10):
 
     ## statistical diffs
     OUTPUT_ACTUAL_DIFFS = True
@@ -192,71 +195,66 @@ def model_based_experiments(ks, min_diffs, alphas, traces_to_sample, models_grou
     # traces_to_sample = [50, 500, 1000, 5000, 10000, 50000, 100000]  # [50, 500, 5000, 50000, 100000, 500000]
 
     ## Repetition per configuration
-    MODEL_IDS = range(MODELS2FETCH)
-    full_log_size = 100000 ## TODO: repalce this with read log size
-    biases = (0,)  # (0, 0.1, -0.1)
-    for model_id in MODEL_IDS:
+    for models_to_fetch in models_to_fetch_arr:
+        MODEL_IDS = range(0, len(get_models_location(models_group).models))
 
-        experiment_results = Experiment_Result(biases)
-        for k in ks:
-            logs, true_ksequence_transtion_probabilities, experiment_name, outpath = get_models(model_id, models_group, results_folder, MODELS2FETCH, k)
-            if single_instance:
-                for i in range(1, MODELS2FETCH):
-                    logs[i] = logs[0]
-                    true_ksequence_transtion_probabilities[i] = true_ksequence_transtion_probabilities[0]
-                    experiment_name += '_single_instance'
-                else:
-                    experiment_name += '_multiple_instances'
+        for model_id in MODEL_IDS:
+            for k in ks:
+                logs, true_ksequence_transtion_probabilities, model_name, outpath = get_models(model_id, results_folder, models_to_fetch, k, models_group)
+                if single_instance:
+                    for i in range(1, models_to_fetch):
+                        logs[i] = logs[0]
+                        true_ksequence_transtion_probabilities[i] = true_ksequence_transtion_probabilities[0]
 
-            import os
-            if not os.path.exists(outpath):
-                os.makedirs(outpath)
+                import os
+                if not os.path.exists(outpath):
+                    os.makedirs(outpath)
 
-            for (min_diff, alpha) in itertools.product(min_diffs, alphas):
-                for sample in traces_to_sample:
-                    for trial in range(repetitions):  ## repeat the experiment for m randomally selected logs
-                        sampled_logs = [sample_traces(log, sample) for log in logs]
-                        alg = sld.MultipleSLPDAnalyzer(sampled_logs)
-                        diffs = alg.find_statistical_diffs(k, min_diff, alpha)
-                        if OUTPUT_ACTUAL_DIFFS:
-                            vals = "_".join(
-                                ['k_' + str(k), 'd_' + str(min_diff), 'al_' + str(alpha), 's_' + str(sample),
-                                 't_' + str(trial)])
-                            keys = list(diffs[list(diffs.keys())[0]].keys())
-                            keys.extend(['source', 'target'])
-                            df = pd.DataFrame(columns=keys)
-                            for diff in diffs:
-                                item = diffs[diff].copy()
-                                _enrich_diff_with_experiment_info(MODELS2FETCH, diff, item, min_diff, true_ksequence_transtion_probabilities)
-                                df = df.append(item, ignore_index=True)
+                for (min_diff, alpha) in itertools.product(min_diffs, alphas):
+                    for sample in traces_to_sample:
+                        for trial in range(repetitions):  ## repeat the experiment for m randomally selected logs
+                            sampled_logs = [sample_traces(log, sample) for log in logs]
+                            alg = sld.MultipleSLPDAnalyzer(sampled_logs)
+                            diffs = alg.find_statistical_diffs(k, min_diff, alpha)
+                            if OUTPUT_ACTUAL_DIFFS:
+                                vals = "_".join(
+                                    ['k_' + str(k), 'd_' + str(min_diff), 'al_' + str(alpha), 's_' + str(sample),
+                                     't_' + str(trial)])
+                                keys = list(diffs[list(diffs.keys())[0]].keys())
+                                keys.extend(['source', 'target'])
+                                df = pd.DataFrame(columns=keys)
+                                for diff in diffs:
+                                    item = diffs[diff].copy()
+                                    item['model'] = model_name
+                                    item['single_instance'] = single_instance
+                                    _enrich_diff_with_experiment_info(models_to_fetch, diff, item, min_diff, true_ksequence_transtion_probabilities)
+                                    df = df.append(item, ignore_index=True)
 
-                            if WRITE_SINGLE_EXPERIMENT_RESULTS:
-                                df.to_csv(outpath + 'ex_' + experiment_name + "_" + vals + '_diffs' + '.csv')
-                                # print_diffs(diffs, RESULT_FODLER + 'ex_' + experiment_name + "_" + vals + '_diffs' + '.csv')
-                        experiment_results.add_experiment_result(true_ksequence_transtion_probabilities, k, min_diff, (0,), alpha, diffs, sample,
-                                                                 full_log_size)
-
-        experiment_results.export_to_csv(
-            outpath + 'ex_' + experiment_name + '_results' + '.csv')
-        experiment_results.export_summary_to_csv(
-            outpath + 'ex_' + experiment_name + '_results_summary' + '.csv')
-
-
-
-def experiment_setup_1():
-    ks = [2]
-    min_diffs = [0.05]
-    alphas = [0.05]
-    single_instance = True
-    RESULT_FODLER = '../../results/statistical_experiments/model_based/multiple_logs/setup_1'
-    # log_based_experiments()
-    MODELS2FETCH = 4
-    models_group = 0
-    traces_to_sample = [10000]
-    model_based_experiments(ks, min_diffs, alphas, traces_to_sample, models_group, RESULT_FODLER, single_instance)
+                                if WRITE_SINGLE_EXPERIMENT_RESULTS:
+                                    df.to_csv(outpath + 'ex_' + model_name + "_" + vals + '_diffs' + '.csv')
+                                    # print_diffs(diffs, RESULT_FODLER + 'ex_' + experiment_name + "_" + vals + '_diffs' + '.csv')
+                            experiment_results.add_experiment_result(true_ksequence_transtion_probabilities, k, min_diff, (0,), alpha, diffs, sample,
+                                                                     model_name, single_instance) ## full_log_size,
 
 
 
 
-if __name__ == '__main__':
-    experiment_setup_1()
+
+# def experiment_setup_1():
+#     ks = [2]
+#     min_diffs = [0.05]
+#     alphas = [0.05]
+#     single_instance = True
+#     RESULT_FODLER = '../../results/statistical_experiments/model_based/multiple_logs/setup_1'
+#     # log_based_experiments()
+#     MODELS2FETCH = 4
+#     models_group = 0
+#     traces_to_sample = [10000]
+#     experiment_results = SNKDiff_Experiment_Result()
+#     run_model_based_experiments(ks, min_diffs, alphas, traces_to_sample, models_group, experiment_results, RESULT_FODLER, single_instance)
+#     experiment_results.export_to_csv(outpath + 'ex_' + model_name + '_results' + '.csv')
+#     experiment_results.export_summary_to_csv(outpath + 'ex_' + model_name + '_results_summary' + '.csv')
+#
+#
+# if __name__ == '__main__':
+#     experiment_setup_1()

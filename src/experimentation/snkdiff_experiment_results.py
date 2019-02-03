@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 import src.statistical_diffs.statistical_log_diff_analyzer as sld
-import src.statistical_diffs.hypothesis_testing
+# import src.statistical_diffs.hypothesis_testing
 from hypothesis_testing import is_significant_by_multiple_proportions_test
 
 
@@ -12,17 +12,17 @@ def create_sample_realization(number_of_trace, p1):
     b[:len(a)] += a
     return b
 
-class Experiment_Result():
+class SNKDiff_Experiment_Result():
 
-    def __init__(self, biases):
+    def __init__(self, biases= (0,)):
         self.pairwise_results = None
         self.chi_square_results = None
-        self.columns = ['traces', 'k', 'min_diff', 'alpha']
+        self.columns = ['model', 'single_instance', 'sample_size', 'k', 'min_diff', 'alpha', 'num_of_logs']
         self.bs = ['bias_'+str(i) for i in range(len(biases))]
         self.columns.extend(self.bs)
         self.columns.extend(['tp', 'fp', 'tn', 'fn', 'precision',
                    'recall', 'acc', 'true_error (tp/tn+fp)', 'power (tp/tp+fn)'])
-        self.grp_by_columns = ['traces', 'k', 'min_diff', 'alpha']
+        self.grp_by_columns = ['model', 'single_instance', 'sample_size', 'k', 'min_diff', 'alpha', 'num_of_logs']
         self.grp_by_columns.extend(self.bs)
 
     def compare_two_logs(self, transition_probabilities, sampled_diffs, i, j, min_diff):
@@ -82,13 +82,13 @@ class Experiment_Result():
         #
         # return False
 
-    def add_experiment_result(self, T2Ps, k, min_diff, biases, alpha, statistical_diffs, number_of_trace, full_log_size):
+    def add_experiment_result(self, T2Ps, k, min_diff, biases, alpha, statistical_diffs, number_of_trace, model_name, single_instance):
         '''
             :param transitions_to_probabilities_per_log: list of dictionaries of mapping k_futures -> k_futures for each of the logs
         '''
-        new_chi_square_row = [number_of_trace, k, min_diff, alpha]
+        new_chi_square_row = [model_name, single_instance, number_of_trace, k, min_diff, alpha, len(T2Ps)]
         new_chi_square_row.extend(biases)
-        new_pairwise_row = [number_of_trace, k, min_diff, alpha]
+        new_pairwise_row = [model_name, single_instance, number_of_trace, k, min_diff, alpha, len(T2Ps)]
         new_pairwise_row.extend(biases)
         ## create a mapping of transitions to probabilities (in each of the logs)
         all_transitions = {}
@@ -162,25 +162,76 @@ class Experiment_Result():
         return acc, power, precision, recall, statistical_error
 
     def export_to_csv(self, path):
-        path_pairwise = path.replace('.csv', '_pairwise.csv')
-        with open(path_pairwise, 'wb') as f:
-            f.write(bytes(",".join(self.columns)+'\n','utf-8'))
-            np.savetxt(f, self.pairwise_results, delimiter=",", fmt='%.4f')
-        chi_square = path.replace('.csv', '_multiple_props.csv')
-        with open(chi_square, 'wb') as f:
-            f.write(bytes(",".join(self.columns)+'\n','utf-8'))
-            np.savetxt(f, self.chi_square_results, delimiter=",", fmt='%.4f')
+
+        import pandas as pd
+        df = pd.DataFrame(data=self.pairwise_results, columns=self.columns)
+        types = dict([(c, 'str') if c in ['model', 'single_instance'] else (c, 'float') for c in self.columns])
+        for t in types:
+            df[t] = df[t].astype(types[t])
+        df['total_transition'] = df['tp'] + df['tn'] + df['fp'] + df['fn']
+        path_z_test = path.replace('.csv', '_z_tests.csv')
+        df.to_csv(path_z_test, index=False, float_format='%.4f')
 
 
-    def export_summary_to_csv(self, path):
+        # path_pairwise = path.replace('.csv', '_s2kdiff.csv')
+        # with open(path_pairwise, 'wb') as f:
+        #     f.write(bytes(",".join(self.columns)+'\n','utf-8'))
+        #     np.savetxt(f, self.pairwise_results, delimiter=",", fmt='%.4f')
 
-        path_pairwise = path.replace('.csv', '_pairwise.csv')
-        res = self.summarize_results(self.pairwise_results)
-        res.to_csv(path_pairwise)
+        df = pd.DataFrame(data=self.chi_square_results, columns=self.columns)
+        types = dict([(c, 'str') if c in ['model', 'single_instance'] else (c, 'float') for c in self.columns])
+        for t in types:
+            df[t] = df[t].astype(types[t])
+        df['total_transition'] = df['tp'] + df['tn'] + df['fp'] + df['fn']
+        path_chi_square = path.replace('.csv', '_chi_square.csv')
+        df.to_csv(path_chi_square, index=False, float_format='%.4f')
 
-        path_chi_square = path.replace('.csv', '_multiple_props.csv')
-        res = self.summarize_results(self.chi_square_results)
-        res.to_csv(path_chi_square)
+        # chi_square = path.replace('.csv', '_multiple_props.csv')
+        # with open(chi_square, 'wb') as f:
+        #     f.write(bytes(",".join(self.columns)+'\n','utf-8'))
+        #     np.savetxt(f, self.chi_square_results, delimiter=",", fmt='%.4f')
+
+
+    def summarize_this(self, path, results, grp_by_columns=None):
+
+        if not grp_by_columns:
+            grp_by_columns = self.grp_by_columns
+        else:
+            grp_by_columns.extend(self.grp_by_columns)
+
+        df = pd.DataFrame(data=results, columns=self.columns)
+        types = dict([(c, 'str') if c in ['model', 'single_instance'] else (c, 'float') for c in self.columns])
+        for t in types:
+            df[t] = df[t].astype(types[t])
+
+        # bias = df['bias']
+        df = df.replace(-1, np.NaN)
+        # df['bias'] = bias  ## TODO: resolve this ugly hack; need to add bias, since group by with NaN values break the group by
+        df['total_transition'] = df['tp'] + df['tn'] + df['fp'] + df['fn']
+        grps = df.groupby(grp_by_columns)
+        df_means = grps.mean()
+        df_means['parameter'] = 'mean'
+        df_std = grps.std()
+        df_std['parameter'] = 'std'
+        df_median = grps.median()
+        df_median['parameter'] = 'statistics'
+        summary = pd.concat([df_means, df_std, df_median], axis=0)
+        summary.to_csv(path)
+
+    def export_summary_to_csv(self, path, grp_by_columns= None):
+
+        path_pairwise = path.replace('.csv', '_z_tests.csv')
+        self.summarize_this(path_pairwise, self.pairwise_results, grp_by_columns)
+        path_chi_square = path.replace('.csv', '_chi_square.csv')
+        self.summarize_this(path_chi_square, self.chi_square_results, grp_by_columns)
+
+        # path_pairwise = path.replace('.csv', '_z_tests.csv')
+        # res = self.summarize_results(self.pairwise_results)
+        # res.to_csv(path_pairwise)
+        #
+        # path_chi_square = path.replace('.csv', '_chi_square.csv')
+        # res = self.summarize_results(self.chi_square_results)
+        # res.to_csv(path_chi_square)
 
     def summarize_results(self, results):
         df = pd.DataFrame(data=results, columns=self.columns)
