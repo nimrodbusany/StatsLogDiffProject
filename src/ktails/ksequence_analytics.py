@@ -1,11 +1,7 @@
-from src.graphs.graphs import DGraph
-import random
 import networkx as nx
-import os
-from protocol_models_to_logs import ProtocolModel
-
-TRANSITION_PROBABILITY_ATTRIBUTE = 'transition_probability'
-TRANSITION_LABEL_ATTRIBUTE = 'label'
+from src.utils.disk_operations import create_folder_if_missing
+from src.models.protocol_models_to_logs import ProtocolModel
+from src.utils.project_constants import *
 
 
 def produce_all_paths(graph):
@@ -36,12 +32,12 @@ def update_transition_probabilities_to_probabilities_by_path(graph, path, k_seq_
     trace_prob = 1
     path_labels = []
     for i in range(len(path) - 1):
-        transition = (path[i], path[i + 1])
+        transition = (path[i], path[i+1])
         path_labels.append(labels[transition])
         trace_prob *= probs[transition]
 
     for i in range(len(path_labels)):
-        k_seq_transition = tuple(path_labels[i: i + k + 1])
+        k_seq_transition = tuple(path_labels[i:i+k+1])
         k_seq_transitions_probabilities[k_seq_transition] = k_seq_transitions_probabilities.get(k_seq_transition, 0) + trace_prob
 
 
@@ -104,9 +100,7 @@ def ksequence_analytics_of_stamina(k):
         print('processing:', models[i])
         dir_ = LOGS_OUTPUT_PATH + dirs_[i] + "/"
         model_path = MODELS_PATH + models[i]
-        if not os.path.exists(dir_):
-            os.makedirs(dir_)
-
+        create_folder_if_missing(dir_)
         model = ProtocolModel(model_path)
         k_seqs2k_seqs = compute_k_sequence_transition_probabilities(model, k)
         write_k_seq_probs_to_file(dir_ + 'k_sequence_probs.csv', k_seqs2k_seqs)

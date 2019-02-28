@@ -1,9 +1,9 @@
 import sys
 sys.path.insert(0, './src/')
 sys.path.insert(0, './src/bear/')
-sys.path.insert(0, './src/experimentation/')
+sys.path.insert(0, './src/dep_evaluation/')
 sys.path.insert(0, './src/graphs/')
-sys.path.insert(0, './src/kTails/')
+sys.path.insert(0, './src/ktails/')
 sys.path.insert(0, './src/logs/')
 sys.path.insert(0, './src/logs_parsers/')
 sys.path.insert(0, './src/main/')

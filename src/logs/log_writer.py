@@ -1,4 +1,3 @@
-
 class LogWriter:
 
     TRACE_SEPARATOR = '--'

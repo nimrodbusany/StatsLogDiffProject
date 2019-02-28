@@ -1,15 +1,16 @@
-from src.graphs.graphs import DGraph
 import random
 import networkx as nx
-import os
-from model_based_log_generator import LogGenerator
-from log_writer import LogWriter
-from logs_parsers.simple_log_parser import SimpleLogParser
 import numpy as np
 
-TRANSITION_PROBABILITY_ATTRIBUTE = 'transition_probability'
-TRANSITION_LABEL_ATTRIBUTE = 'label'
+from src.graphs.graphs import DGraph
+from src.models.model_based_log_generator import LogGenerator
+from src.logs.log_writer import LogWriter
+from src.logs_parsers.simple_log_parser import SimpleLogParser
+from src.utils.disk_operations import create_folder_if_missing
 
+from src.utils.project_constants import *
+
+__EXTRA_CHECKS__ = True
 
 class ProtocolModel:
 
@@ -26,33 +27,40 @@ class ProtocolModel:
         shapes['terminal'] = 'plaintext'
 
     @staticmethod
-    def _assign_weights(graph):
+    def _assign_transition_probabilities(graph):
 
         edges2weights = {}
         for n in graph.nodes():
             out_edges = list(graph.out_edges(n))
+            if len(out_edges) == 0:
+                continue
             sum_ = 0
-            cpy_edges = out_edges.copy()
-            ## set probability  to all edges such that all probabilities sums to one
-            while len(out_edges) > 1:
-                selected_edge = random.choice(out_edges)
-                out_edges.remove(selected_edge)
-                weight = round(random.uniform(0.01, 0.95 - sum_), 3)
-                sum_ += weight
-                edges2weights[selected_edge] = weight
-                if weight == 0:
-                    raise ValueError('weight cannot be zero, check for error!')
-            if len(out_edges) == 1:
-                edges2weights[out_edges[0]] = 1 - sum_
-                if 1 - sum_ == 0:
-                    raise ValueError('weight cannot be zero, check for error!')
-                total = sum([edges2weights[edge] for edge in cpy_edges])
-                if total < 0.999 or total > 1.001:
-                    raise ('when generating probabilities, outgoing edges probabilities did not sum to one, but got', total)
-                if total < 1.0:
-                    edge = cpy_edges[cpy_edges.index(max(cpy_edges, key=lambda x: edges2weights[x]))]
-                    edges2weights[edge] = edges2weights[edge] - (total - 1)
 
+            min_edge_w = 0.05
+            min_edge_w_requires = (len(out_edges) * min_edge_w)
+            random_weight_remains = 1.0 - min_edge_w_requires
+            for e in out_edges:
+                e_w = random.random()
+                edges2weights[e] = e_w
+                sum_ += e_w
+            total_ = 0
+            for e in out_edges:
+                edges2weights[e] /= sum_
+                edges2weights[e] = min_edge_w + round(edges2weights[e], 3) * random_weight_remains
+                total_ += edges2weights[e]
+            if total_ < 1:
+                edge = out_edges[out_edges.index(min(out_edges, key=lambda x: edges2weights[x]))]
+                edges2weights[edge] += round((1.0 - total_), 3)
+            if total_ > 1:
+                edge = out_edges[out_edges.index(max(out_edges, key=lambda x: edges2weights[x]))]
+                edges2weights[edge] += round((total_ - 1.0), 3)
+            if __EXTRA_CHECKS__:
+                for w in out_edges:
+                    if edges2weights[w] <= min_edge_w:
+                        raise AssertionError('edge with less than '+str(min_edge_w) + " weight is " + str(edges2weights[w]))
+                total_ = sum([edges2weights[e] for e in out_edges])
+                if not 0.99 < total_ < 1.01:
+                    raise AssertionError('bad weights, total eqauls:' + str(total_))
         nx.set_edge_attributes(graph.dgraph, edges2weights, TRANSITION_PROBABILITY_ATTRIBUTE)
 
     def __init__(self, model_path, id=0, assign_transtion_probs=True, add_sink_node=False):
@@ -60,7 +68,7 @@ class ProtocolModel:
         if add_sink_node:
             self._add_sink_node(graph)
         if assign_transtion_probs:
-            self._assign_weights(graph)
+            self._assign_transition_probabilities(graph)
         self.graph = graph
         self.id = id
 
@@ -87,23 +95,22 @@ class ProtocolModel:
                 fw.write(",".join([str(edge), '%.3f' % edges_prob[edge], edges_label[edge]]) + '\n')
 
 
-def produce_logs_from_stamina(traces2produce):
+def produce_logs_from_stamina(traces2produce, models2produce):
 
     MODELS_PATH = '../../models/stamina/'
     LOGS_OUTPUT_PATH = '../../data/logs/stamina/'
     models = ['ctas.net.simplified.no_loops.dot', 'cvs.net.no_loops.dot', 'roomcontroller.simplified.net.dot',
               'ssh.net.simplified.dot', 'tcpip.simplified.net.dot', 'zip.simplified.dot']
     dirs_ = ['ctas.net', 'cvs.net', 'roomcontroller', 'ssh', 'tcpip', 'zip']
-    MODEL_TO_PRODUCE = 4
+    # MODEL_TO_PRODUCE = 16
 
-    for model_id in range(4, 5):
+    for model_id in range(len(models)):
         print('processing', models[model_id])
         dir_ = LOGS_OUTPUT_PATH + dirs_[model_id] + "/"
         model_path = MODELS_PATH + models[model_id]
-        if not os.path.exists(dir_):
-            os.makedirs(dir_)
+        create_folder_if_missing(dir_)
 
-        for instance_id in range(MODEL_TO_PRODUCE):
+        for instance_id in range(models2produce):
             print('processing instance:', instance_id, model_path)
             model_generator = ProtocolModel(model_path, instance_id)
             log = LogGenerator.produce_log_from_model(model_generator.graph,
@@ -112,23 +119,22 @@ def produce_logs_from_stamina(traces2produce):
             LogWriter.write_log(log, dir_ + 'l' + str(instance_id) + ".log")
 
 
-def produce_logs_from_david(traces2produce):
+def produce_logs_from_david(traces2produce, models2produce):
     MODELS_PATH = '../../models/david/'
     LOGS_OUTPUT_PATH = '../../data/logs/david/'
     models = ['Columba.simplified.dot', 'Heretix.simplified.dot', 'JArgs.simplified.dot',
               'Jeti.Simplified.dot', 'jfreechart.Simplified.dot', 'OpenHospital.Simplified.dot',
               'RapidMiner.Simplified.dot', 'tagsoup.Simplified.dot']
     dirs_ = ['Columba', 'Heretix', 'JArgs', 'Jeti', 'jfreechart', 'OpenHospital', 'RapidMiner', 'tagsoup']
-    MODEL_TO_PRODUCE = 4
+    # MODEL_TO_PRODUCE = 4
 
     for model_id in range(0, len(models)):
         print('processing', models[model_id])
         dir_ = LOGS_OUTPUT_PATH + dirs_[model_id] + "/"
         model_path = MODELS_PATH + models[model_id]
-        if not os.path.exists(dir_):
-            os.makedirs(dir_)
+        create_folder_if_missing(dirs_)
 
-        for instance_id in range(MODEL_TO_PRODUCE):
+        for instance_id in range(models2produce):
             print('processing instance:', instance_id, model_path)
             model_generator = ProtocolModel(model_path, instance_id, assign_transtion_probs=True)
             # transition_probs = nx.get_edge_attributes(model_generator.graph.dgraph, TRANSITION_PROBABILITY_ATTRIBUTE)
@@ -168,11 +174,11 @@ def compute_bear_stats():
 
 if __name__ == '__main__':
 
-    TRACE2PRODUCE = 100000
-    LOGS_IN_FOLDER = 4
+    TRACE2PRODUCE = 200000
+    MODEL_TO_PRODUCE = 8
 
-    # produce_logs_from_stamina(TRACE2PRODUCE)
-    produce_logs_from_david(TRACE2PRODUCE)
+    # produce_logs_from_stamina(TRACE2PRODUCE, MODEL_TO_PRODUCE)
+    produce_logs_from_david(TRACE2PRODUCE, MODEL_TO_PRODUCE)
     #
     # LOGS_OUTPUT_PATH = '../../data/logs/david/'
     # dirs_ = ['Columba', 'Heretix', 'JArgs', 'Jeti', 'jfreechart', 'OpenHospital', 'RapidMiner', 'tagsoup']

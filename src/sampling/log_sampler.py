@@ -1,5 +1,10 @@
 import numpy as np
 
+def create_sample_realization(number_of_trace, p1):
+    a = np.ones(int(p1 * number_of_trace))
+    b = np.zeros(number_of_trace)
+    b[:len(a)] += a
+    return b
 
 def sample_traces(log, n):
     '''

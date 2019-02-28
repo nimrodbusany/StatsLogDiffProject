@@ -1,9 +1,8 @@
 from datetime import datetime
 
-import url_filter
-import user_class_mapper
-from bear_event import BEAREvent
-
+import src.bear.url_filter
+import src.bear.user_class_mapper
+from src.bear.bear_event import BEAREvent
 from bear.url_mapper import *
 
 
@@ -42,11 +41,12 @@ class BearLogParser:
             for i in range(len(ip_events)-1):
                 tr.append(ip_events[i])
                 delta = ip_events[i+1].time - ip_events[i].time
-                if delta.seconds > self.USER_WINDOW:
+                diffrent_user_class = ip_events[i+1].user_class != ip_events[i].user_class
+                if diffrent_user_class or delta.seconds > self.USER_WINDOW:
                     self.traces.append(tr)
                     tr = []
             tr.append(ip_events[-1])
-            self.traces.append(tr)
+            self.traces.append(tuple(tr))
 
         return self.traces
 
@@ -114,6 +114,19 @@ class BearLogParser:
         MOBILE_OS = ['iPhone', 'iPad', 'Symbian', 'iPod', 'Android', 'SymbianOS', 'BlackBerry', 'Windows Phone', 'Mobile Safari']
         return [tr for tr in traces for os in MOBILE_OS if os in tr[0].user_class]
 
+    def get_non_user_traces(self, traces):
+        UsersOS = ['iPhone', 'iPad', 'Symbian', 'iPod', 'Android', 'SymbianOS', 'BlackBerry', 'Windows Phone', 'Mobile Safari', 'Windows NT', 'Windows 98', 'Macintosh']
+        non_user_traces_ = []
+        for tr in traces:
+            found_os = False
+            for os in UsersOS:
+                if os in tr[0].user_class:
+                    found_os = True
+                    break
+            if not found_os:
+                non_user_traces_.append(tuple(tr))
+        return non_user_traces_
+
 
 
 
@@ -165,6 +178,71 @@ class BearLogParser:
             traces_as_list.append(list(tr_as_list))
         return traces_as_list
 
+
+def split_trace_in_half_by_time(traces, split_by_events=True):
+
+    sorted_traces_by_date = sorted(traces, key=lambda tr: tr[0].time)
+    if split_by_events:
+        total_events = sum([1 for tr in traces for ev in tr])
+        seen_events, mid_ = 0, 0
+        while(seen_events) < total_events/2:
+            seen_events += len(traces[mid_])
+            mid_ += 1
+        return sorted_traces_by_date[:mid_], sorted_traces_by_date[mid_:]
+    else:
+        mid_ = int(len(sorted_traces_by_date) / 2)
+        return sorted_traces_by_date[:mid_], sorted_traces_by_date[mid_:]
+
+def split_logs_to_two_and_write(traces):
+
+    first_half, second_half = split_trace_in_half_by_time(traces)
+    first_half_traces = []
+    for tr in first_half:
+        first_half_traces.append([ev.label for ev in tr])
+    second_half_traces = []
+    for tr in second_half:
+        second_half_traces.append([ev.label for ev in tr])
+    from log_writer import LogWriter
+    LogWriter.write_log(first_half_traces, '../../data/bear/first_half_traces.log')
+    LogWriter.write_log(second_half_traces, '../../data/bear/last_half_traces.log')
+
+
+def split_traces_by_months_and_write(traces):
+
+    months = {}
+    for trace in traces:
+        month_year = (trace[0].time.year, trace[0].time.month)
+        if month_year not in months:
+            months[month_year] = []
+        trace_labels = [ev.label for ev in trace]
+        months[month_year].append(trace_labels)
+    from log_writer import LogWriter
+    for m in months:
+        print('month/year', m, 'had',len(months[m]), 'traces')
+        LogWriter.write_log(months[m], '../../data/bear/'+str(m[0])+'_'+str(m[1])+'.log')
+
+
+def split_traces_by_quarters_and_write(traces):
+
+    quarters = {'Q1':[], 'Q2':[], 'Q3':[], 'Q4':[]}
+    for trace in traces:
+        if trace[0].time.year == 2011:
+            continue
+        trace_labels = [ev.label for ev in trace]
+        if trace[0].time.month <= 3:
+            quarters['Q1'].append(trace_labels)
+        elif trace[0].time.month <= 6:
+            quarters['Q2'].append(trace_labels)
+        elif trace[0].time.month <= 9:
+            quarters['Q3'].append(trace_labels)
+        elif trace[0].time.month <= 12:
+            quarters['Q4'].append(trace_labels)
+
+    from log_writer import LogWriter
+    for q in quarters:
+        print('month/year', q, 'had',len(quarters[q]), 'traces')
+        LogWriter.write_log(quarters[q], '../../data/bear/'+str(q)+'.log')
+
 if __name__ == '__main__':
 
     LOG_PATH = '../../data/bear/findyourhouse_long.log'
@@ -173,7 +251,13 @@ if __name__ == '__main__':
 
     log_parser = BearLogParser(LOG_PATH)
     traces = log_parser.process_log(True)
-    log1 = log_parser.get_traces_of_browser("Mozilla/4.0")
-    log1 = log_parser.get_traces_as_lists_of_event_labels(log1)
-    log2 = log_parser.get_traces_of_browser("Mozilla/5.0")
-    log2 = log_parser.get_traces_as_lists_of_event_labels(log2)
+    mobile = log_parser.get_mobile_traces(traces)
+    desktop = log_parser.get_desktop_traces(traces)
+    non_user_traces = log_parser.get_non_user_traces(traces)
+    # split_traces_by_months_and_write(traces)
+    split_traces_by_quarters_and_write(traces)
+    # split_logs_to_two_and_write(traces)
+    # log1 = log_parser.get_traces_of_browser("Mozilla/4.0")
+    # log1 = log_parser.get_traces_as_lists_of_event_labels(log1)
+    # log2 = log_parser.get_traces_of_browser("Mozilla/5.0")
+    # log2 = log_parser.get_traces_as_lists_of_event_labels(log2)

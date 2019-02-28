@@ -1,7 +1,8 @@
 import xml.etree.ElementTree as ET
-from graphs.graphs import DGraph
 import networkx as nx
 
+from src.graphs.graphs import DGraph
+from src.utils.project_constants import *
 
 def from_zeller_xml_to_dgraph(path):
 
@@ -26,8 +27,8 @@ def from_zeller_xml_to_dgraph(path):
         shapes[node_name] = set_shape(node_name)
 
     for edge in edges:
-        source = edge.get('source')
-        target = edge.get('target')
+        source = edge.get(SOURCE_ATTR_NAME)
+        target = edge.get(TARGET_ATTR_NAME)
         label = edge.find('data').text
         transitions_arr.append((source, target, label))
 

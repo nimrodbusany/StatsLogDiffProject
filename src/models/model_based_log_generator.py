@@ -1,11 +1,28 @@
+import numpy as np
 from src.graphs.graphs import DGraph
 from src.main.config import RESULTS_PATH
-import numpy as np
-from networkx.drawing.nx_agraph import write_dot
 
 class LogGenerator:
 
-    @classmethod
+    def __init__(self, model, edge_prob_attribute='transition_probability', aggregated_probs=True):
+        self.model = model
+        self.init_nodes = [n[0] for n in model.get_initial_nodes()]
+        self.terminal_nodes = [n[0] for n in model.get_sink_nodes()]
+        self.aggregated_probs = aggregated_probs
+        self.nodes_2_edges_dict = {}
+        for node in model.nodes():
+            edges = list(self.model.out_edges(node))
+            weights = [model.get_edge_data(e)[edge_prob_attribute] for e in edges]
+            if aggregated_probs:
+                agg_weights = []
+                for i in range(len(weights)):
+                    agg_weights.append(sum(weights[:i+1]))
+            self.nodes_2_edges_dict[node] = {"edges": edges, "transition_probability": list(agg_weights)}
+
+        if len(self.init_nodes) == 0:
+            raise AssertionError('To generate a trace, at least one node must be provided!')
+
+
     def _generate_single_split_model(cls, split_bias_probability=0.0):
         '''
 
@@ -34,15 +51,69 @@ class LogGenerator:
         g.add_edge_attribute(3, 4, 'label', 'c')
         return g
 
-    @classmethod
-    def _choose_element_at_random(cls, elements, probabilities = None):
+    def _generate_trace(self, edge_label_attribute='label', node_label_attribute=None, edge_prob_attribute='weight'):
+        '''
+        :param g: a directed graph,
+        Assumption 1: must have at least one sink state
+        Assumption 2: sink states are interpreted as terminal states
+        Assumption 3: it is assumed that any state in g can reach a terminal state
+        :return: a trace
+        '''
+        current_node = self.init_nodes[0]
+        if len(self.init_nodes) > 1:
+            # if multiple initial nodes exists, choose one at random: TODO: use node weight when possible
+            # current_node = self._choose_element_at_random()
+            raise NotImplemented("currently unsupported")
+
+        trace = []
+        while current_node not in self.terminal_nodes: ## TODO: allow looping out of terminal states, when possible!
+            # if required, add nodes label
+            if node_label_attribute:
+                trace.append(self.model.node_attr(current_node, node_label_attribute))
+
+            # select next edge randomaly by weight
+            node_tup = self.nodes_2_edges_dict[current_node]
+            edges = node_tup["edges"] #self.model.out_edges(current_node)
+            weights = node_tup["transition_probability"] ##[g.get_edge_data(e)[edge_prob_attribute] for e in edges]
+            e = self._choose_element_at_random(edges, weights)
+
+            # if required, add edge label
+            if edge_label_attribute:
+                trace.append(self.model.get_edge_data(e)[edge_label_attribute])
+            current_node = e[1]
+
+        return tuple(trace)
+
+
+
+    def _choose_at_random_by_method(self, N, probabilities):
+        if not self.aggregated_probs:
+            return np.random.choice(N, p=probabilities, size=1)[0]
+        else:
+            if probabilities[-1] > 0.99:
+                probabilities[-1] = 1
+            else:
+                raise ValueError('BAD probs'+str(probabilities))
+            import random
+            num = random.random()
+            i = 0
+            while num > probabilities[i]:
+                i += 1
+
+            return i
+
+    # [ 0.2, 0.5, 1] 0.1 -> 0; 0.4 -> 1; 0.6;
+    def _choose_element_at_random(self, elements, probabilities = None, \
+                                  perfrom_checks=False):
         '''
         :param elements: : a list of elemnts
         :param probabilities: a list of probabilities per elements (must sum to 1); assumed uniformed of non is provided
         :return: element from the list
         '''
-        if abs(1 - sum(probabilities)) > 0.001:
-            raise AssertionError('probabilities must some to 1.0, but sum to '+ str(sum(probabilities) + ' values: ' + str(probabilities)))
+
+        if perfrom_checks:
+            if abs(1 - sum(probabilities)) > 0.001:
+                raise AssertionError('probabilities must some to 1.0, but sum to '+ str(sum(probabilities) + ' values: ' + str(probabilities)))
         if min(probabilities) < 0:
             if min(probabilities) < -0.001:
                 raise AssertionError('probabilities must non negative: ' + str(probabilities))
@@ -52,47 +123,15 @@ class LogGenerator:
         N = len(elements)
         if not probabilities:
             probabilities = []
+            sum_=0
             for i in range(N):
-                probabilities.append(1.0 / N)
-        ind = np.random.choice(N, p=probabilities, size=1)
-        return elements[ind[0]]
-
-    @classmethod
-    def _generate_trace(cls, g, edge_label_attribute='label', node_label_attribute=None, edge_prob_attribute='weight'):
-        '''
-        :param g: a directed graph,
-        Assumption 1: must have at least one sink state
-        Assumption 2: sink states are interpreted as terminal states
-        Assumption 3: it is assumed that any state in g can reach a terminal state
-        :return: a trace
-        '''
-        init_nodes = [n[0] for n in g.get_initial_nodes()]
-        terminal_nodes = [n[0] for n  in g.get_sink_nodes()]
-        if len(init_nodes) == 0:
-            raise AssertionError('To generate a trace, at least one node must be provided!')
-
-        current_node = init_nodes[0]
-        if len(init_nodes) > 1:
-            # if multiple initial nodes exists, choose one at random: TODO: use node weight when possible
-            current_node = cls._choose_element_at_random(init_nodes)
-
-        trace = []
-        while current_node not in terminal_nodes:
-            # if required, add nodes label
-            if node_label_attribute:
-                trace.append(g.node_attr(current_node, node_label_attribute))
-
-            # select next edge randomaly by weight
-            edges = g.out_edges(current_node)
-            weights = [g.get_edge_data(e)[edge_prob_attribute] for e in edges]
-            e = cls._choose_element_at_random(list(edges), weights)
-
-            # if required, add edge label
-            if edge_label_attribute:
-                trace.append(g.get_edge_data(e)[edge_label_attribute])
-            current_node = e[1]
-
-        return trace
+                if self.aggregated_probs:
+                    sum_ += 1.0 / N
+                    probabilities.append(sum_)
+                else:
+                    probabilities.append(1.0 / N)
+        ind = self._choose_at_random_by_method(N, probabilities=probabilities)
+        return elements[ind]
 
     @classmethod
     def produce_log_from_single_model(cls, model, bias = 0.0, size_ =10, add_dummy_initial= True, add_dummy_terminal= True):
@@ -150,8 +189,9 @@ class LogGenerator:
     @staticmethod
     def produce_log_from_model(model, traces2produce=1000, transition_probability_attribute='prob'):
         log = []
+        log_gen = LogGenerator(model)
         for i in range(traces2produce):
-            trace = LogGenerator._generate_trace(model, edge_prob_attribute=transition_probability_attribute)
+            trace = log_gen._generate_trace(edge_prob_attribute=transition_probability_attribute)
             log.append(trace)
         return log
 
@@ -164,6 +204,6 @@ if __name__ == '__main__':
     g.write_dot(RESULTS_PATH + '/exmaple_1.dot', True)
     ks_dict = {}
     for i in range(100):
-        t = tuple(LogGenerator.generate_trace(g))
+        t = LogGenerator._generate_trace(g)
         ks_dict[t] = ks_dict.get(t, 0) + 1
     print (ks_dict)

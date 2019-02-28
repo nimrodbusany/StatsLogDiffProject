@@ -1,3 +1,4 @@
+from src.utils.project_constants import *
 
 class SimpleLogParser:
 
@@ -14,10 +15,10 @@ class SimpleLogParser:
             for l in lines:
                 if l.strip() == SimpleLogParser.TRACE_SEPARATOR:
                     if len(tr) > 0:
-                        traces.append(tr)
+                        traces.append(tuple(tr))
                         tr = []
                     continue
                 tr.append(l)
                 i+=1
-        print('-> Done parsing ', log_path, 'read', len(traces), 'traces')
+        print('-> Done parsing ', log_path, 'read', len(traces), TRACES_ATTR_NAME)
         return traces
