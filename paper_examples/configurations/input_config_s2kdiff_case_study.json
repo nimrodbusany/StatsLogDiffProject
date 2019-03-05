@@ -1,0 +1,13 @@
+{
+    "logs": [
+        {
+            "id": "benign",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/piggy/P9-benign-guiripper2.txt"
+        },
+        {
+            "id": "piggy",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/piggy/P9-piggy-guiripper2.txt"
+        }
+    ],
+    "output_dir": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/results/case_study/"
+}

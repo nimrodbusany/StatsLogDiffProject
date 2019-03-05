@@ -1,0 +1,14 @@
+{
+    "logs": [
+        {
+            "id": "benign",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/piggy/P9-benign-droidbot.txt"
+        },
+        {
+            "id": "piggy",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/piggy/P9-piggy-droidbot.txt"
+        }
+    ],
+    "output_dir": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/results/case_study/droidbot/"
+}
+
