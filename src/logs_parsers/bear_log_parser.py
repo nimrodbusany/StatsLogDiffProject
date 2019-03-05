@@ -3,7 +3,7 @@ from datetime import datetime
 import src.bear.url_filter
 import src.bear.user_class_mapper
 from src.bear.bear_event import BEAREvent
-from bear.url_mapper import *
+from src.bear.url_mapper import *
 
 
 class BearLogParser:

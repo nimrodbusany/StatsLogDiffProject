@@ -2,9 +2,11 @@ import numpy as np
 import networkx as nx
 from src.utils.project_constants import *
 
-def split2groups(diffs, required_diff):
+SIGNIFICANCE_BASED_LABELING = True
 
-    significant_diffs = dict([item for item in diffs['pairwise_comparisons'].items() if item[1]['significant_diff']])
+def split2groups(diff, required_diff):
+
+    significant_diffs = dict([item for item in diff['pairwise_comparisons'].items() if item[1]['significant_diff']])
     logs2ps = {}
     for item_id in significant_diffs:
         if item_id[0] not in logs2ps:
@@ -12,16 +14,9 @@ def split2groups(diffs, required_diff):
         if item_id[1] not in logs2ps:
             logs2ps[item_id[1]] = significant_diffs[item_id]['p2']
     logs_sorted_by_proportion = sorted(logs2ps.items(), key=lambda x: x[1])
-    current_group = [logs_sorted_by_proportion[0]]
-    groups = [current_group]
-    i = 1
-    while i < len(logs_sorted_by_proportion):
-        if logs_sorted_by_proportion[i][1] > logs_sorted_by_proportion[i-1][1] + required_diff:
-            current_group = [logs_sorted_by_proportion[i]]
-            groups.append(current_group)
-        else:
-            current_group.append(logs_sorted_by_proportion[i])
-        i+=1
+
+    groups = significance_based_distance(logs_sorted_by_proportion, significant_diffs) if SIGNIFICANCE_BASED_LABELING \
+        else distance_based_grouping(logs_sorted_by_proportion, required_diff)
 
     labels = []
     means = []
@@ -32,6 +27,37 @@ def split2groups(diffs, required_diff):
         labels.append([v[0] for v in gr])
 
     return labels, means
+
+
+def significance_based_distance(logs_sorted_by_proportion, significant_diffs):
+
+    groups, grp = [], []
+    for log_tup in logs_sorted_by_proportion:
+        for log_tup2 in grp:
+            significant_diff = (log_tup[0], log_tup2[0]) in significant_diffs \
+                               or (log_tup2[0], log_tup[0]) in significant_diffs
+            if significant_diff:
+                groups.append(grp)
+                grp = []
+                break
+        grp.append(log_tup)
+    if len(grp):
+        groups.append(grp)
+    return groups
+
+def distance_based_grouping(logs_sorted_by_proportion, required_diff):
+
+    current_group = [logs_sorted_by_proportion[0]]
+    groups = [current_group]
+    i = 1
+    while i < len(logs_sorted_by_proportion):
+        if logs_sorted_by_proportion[i][1] > logs_sorted_by_proportion[i - 1][1] + required_diff:
+            current_group = [logs_sorted_by_proportion[i]]
+            groups.append(current_group)
+        else:
+            current_group.append(logs_sorted_by_proportion[i])
+        i += 1
+    return groups
 
 def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, coloring_scheme=False):
 

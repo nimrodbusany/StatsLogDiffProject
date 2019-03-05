@@ -52,9 +52,10 @@ class ExperimentResult:
         new_pairwise_row = [logs_batch.batch_name, number_of_trace, k, min_diff, alpha, len(T2Ps)]
         ## create a mapping of transitions to probabilities (in each of the logs)
         all_transitions = {}
-
+        log_ids = list(logs_batch.logs.keys())
         for j in range(len(T2Ps)):
             T2P = T2Ps[j]
+            id_j = log_ids[j]
             ### go over the dict of each log
             for trans_pre in T2P:
                 ### go over each equiv class
@@ -64,7 +65,7 @@ class ExperimentResult:
                     transition = (trans_pre, future_trans)
                     pr = trans_futures[future_trans]
                     transition_probabilities = all_transitions.get(transition, {})
-                    transition_probabilities[j] = pr
+                    transition_probabilities[id_j] = pr
                     all_transitions[transition] = transition_probabilities
 
         tp, tn, fp, fn = 0, 0, 0, 0
@@ -92,7 +93,6 @@ class ExperimentResult:
                         m_fn += 1
 
                     ## check second multiple logs test
-                    log_ids = list(logs_batch.logs.keys())
                     for i in range(len(T2Ps)):
                         for j in range(i+1, len(T2Ps)):
                             id_i = log_ids[i]

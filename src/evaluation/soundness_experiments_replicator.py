@@ -74,5 +74,5 @@ if __name__ == '__main__':
     output_dir = '../../evaluation/results/soundness/bear/'
     configuration_file = "../../evaluation/configuration_files/logs_input_configuration.json"
     logs_manager = RealWorldLogsManager(configuration_file)
-    run_evaluation_experiments(logs_manager, k_exp=True, diff_exp=True, sample_exp=True, logs_exp=True, alpha=True)
+    run_evaluation_experiments(output_dir, logs_manager, k_exp=True, diff_exp=True, sample_exp=True, logs_exp=True, alpha=True)
     # run_evaluation_experiments(output_dir, logs_manager, k_exp = False, diff_exp = False, sample_exp = True, logs_exp = False, alpha = False)

@@ -1,8 +1,8 @@
 import networkx as nx
-import graph_filtering
+import src.ktails.graph_filtering
 
-from bear_log_parser import BearLogParser
-from project_constants import *
+from src.logs_parsers.bear_log_parser import BearLogParser
+from src.utils.project_constants import *
 
 INIT_LABEL = '"init"'
 TERM_LABEL = '"term"'
