@@ -16,6 +16,59 @@ DFLT_MIN_DIFF = 0.01
 DFLT_ALPHA = 0.05
 DFLT_REPETITIONS = 2
 
+def run_time_measurements(logs_manager_, output_dir, \
+                          k_exp=False, diff_exp=False, alpha=False, sample_exp=False, logs_exp=False):
+
+    experiment_set_id = 'exp_id_' + ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    print('Experiment ID', experiment_set_id)
+    output_dir = output_dir + '/' + experiment_set_id + "/"
+    print('Experiment ID', experiment_set_id)
+    if k_exp:  # snkdiff experiment varying k
+        print("==== RUNNING k EXPERIMENTS ====")
+        run_and_measure_algorithms(output_dir,  's2kdiff_k.csv', logs_manager_, 1, models_2_fetch=[2], ks=[1, 2, 3, 4], experiment_set_id=experiment_set_id)
+        run_and_measure_algorithms(output_dir  + '/snkdiff.csv', logs_manager_, 2, models_2_fetch=[4], ks=[1, 2, 3, 4], experiment_set_id=experiment_set_id)
+
+    if alpha:  # snkdiff experiment varying alpha
+        print("==== RUNNING ALPHA EXPERIMENTS ====")
+        run_and_measure_algorithms(output_dir,  's2kdiff_alpha.csv', logs_manager_, 1, models_2_fetch=[2], alphas=[0.1, 0.15])
+        run_and_measure_algorithms(output_dir,  'snkdiff_alpha.csv', logs_manager_, 2, models_2_fetch=[4], alphas=[0.1, 0.15])
+
+    if diff_exp:  # snkdiff experiment varying min_diff
+        print("==== RUNNING MIN_DIFF EXPERIMENTS ====")
+        run_and_measure_algorithms(output_dir,  's2kdiff_min_diff.csv', logs_manager_, 1, min_diffs=[0.01, 0.05, 0.1, 0.2, 0.4])
+        run_and_measure_algorithms(output_dir,  'snkdiff__min_diff.csv', logs_manager_, 2, models_2_fetch=[4], min_diffs=[0.01, 0.05, 0.1, 0.2, 0.4])
+
+    if sample_exp:  # snkdiff experiment varying samples
+        print("==== RUNNING LOG_SIZE EXPERIMENTS ====")
+        run_and_measure_algorithms(output_dir,  's2kdiff_sample_size.csv', logs_manager_, 1, models_2_fetch=[2],
+                                     traces_to_sample=[100, 1000, 2000, 5000])  # 100,  500, 2500, 12500, 60000
+        run_and_measure_algorithms(output_dir,  'snkdiff_sample_size.csv', logs_manager_, 2, models_2_fetch=[4],
+                                   traces_to_sample=[100, 1000, 2000, 5000])  # , 500, 1000, 5000, 10000, 50000]) ## 100, 1000, 10000, 50000
+
+    if logs_exp:  # Experiment_setup VARYING LOGS!
+        print("==== RUNNING NUMBER_OF_LOGS EXPERIMENTS ====")
+        run_and_measure_algorithms(output_dir,  'snkdiff_num_logs.csv', logs_manager_, 2, models_2_fetch=[2, 4, 6, 8])
+
+    ## run and time s2kdiff
+    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=1, ks=[2, 3, 4], min_diffs=[0.05], alphas=[0.05], \
+    #                                 traces_to_sample=[100, 1000, 10000, 50000], models2fetch_arr = [2],  repetitions = 10, experiment_set_id = experiment_set_id)
+    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=1, ks=[2], min_diffs=[0.05], alphas=[0.05], \
+    #                                 traces_to_sample=[100], models2fetch_arr=[2], repetitions=2, experiment_set_id=experiment_set_id)
+    # output_folder = output_folder + "/" + experiment_set_id
+    # create_folder_if_missing(output_folder)
+
+    # df.to_csv(output_folder + '/s2kdiff.csv', index=False)
+    # print("DONE RUNNING 2KDIFF")
+    ## run and time snkdiff
+    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=2, ks=[2, 3, 4], min_diffs=[0.05], alphas=[0.05], \
+    #                                 traces_to_sample=[100, 1000, 10000, 50000],
+    #                                 models2fetch_arr=[2, 4, 6, 8], repetitions=10, experiment_set_id=experiment_set_id)
+    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=2, ks=[2], min_diffs=[0.05], alphas=[0.05], \
+    #                                 traces_to_sample=[100], models2fetch_arr=[4], repetitions=2,
+    #                                 experiment_set_id=experiment_set_id)
+    # df.to_csv(output_folder + '/snkdiff.csv', index=False)
+    # print("DONE RUNNING 2NKDIFF")
+
 def run_and_measure_algorithms(output_path, fname, logs_manager, run_s2kdiff,  ks=[DFLT_K], min_diffs=[DFLT_MIN_DIFF], \
                                            alphas=[DFLT_ALPHA], traces_to_sample=[DFLT_LOG_SIZE],
                                models_2_fetch = [DFLT_NUM_OF_MODELS], repetitions=DFLT_REPETITIONS):
@@ -48,59 +101,6 @@ def run_and_measure_algorithms(output_path, fname, logs_manager, run_s2kdiff,  k
     create_folder_if_missing(output_path)
     df.to_csv(output_path+fname, index=False)
 
-def run_time_measurements(logs_manager_, output_dir, \
-                          k_exp=False, diff_exp=False, alpha=False, sample_exp=False, logs_exp=False):
-
-    experiment_set_id = 'exp_id_' + ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-    print('Experiment ID', experiment_set_id)
-    output_dir = output_dir + '/' + experiment_set_id + "/"
-    print('Experiment ID', experiment_set_id)
-    if k_exp:  # snkdiff experiment varying k
-        print("==== RUNNING k EXPERIMENTS ====")
-        run_and_measure_algorithms(output_dir,  's2kdiff_k.csv', logs_manager_, 1, ks=[1, 2, 3, 4], experiment_set_id=experiment_set_id)
-        run_and_measure_algorithms(output_dir  + '/snkdiff.csv', logs_manager_, 2, ks=[1, 2, 3, 4], experiment_set_id=experiment_set_id)
-
-    if alpha:  # snkdiff experiment varying alpha
-        print("==== RUNNING ALPHA EXPERIMENTS ====")
-        run_and_measure_algorithms(output_dir,  's2kdiff_alpha.csv', logs_manager_, 1, alphas=[0.01, 0.05, 0.1, 0.15])
-        run_and_measure_algorithms(output_dir,  'snkdiff_alpha.csv', logs_manager_, 2, alphas=[0.01, 0.05, 0.1, 0.15])
-
-    if diff_exp:  # snkdiff experiment varying min_diff
-        print("==== RUNNING MIN_DIFF EXPERIMENTS ====")
-        run_and_measure_algorithms(output_dir,  's2kdiff_min_diff.csv', logs_manager_, 1, min_diffs=[0.01, 0.05, 0.1, 0.2, 0.4])
-        run_and_measure_algorithms(output_dir,  'snkdiff__min_diff.csv', logs_manager_, 2, min_diffs=[0.01, 0.05, 0.1, 0.2, 0.4])
-
-    if sample_exp:  # snkdiff experiment varying samples
-        print("==== RUNNING LOG_SIZE EXPERIMENTS ====")
-        run_and_measure_algorithms(output_dir,  's2kdiff_sample_size.csv', logs_manager_, 1,
-                                     traces_to_sample=[-1, 100, 1000, 2000])  # 100,  500, 2500, 12500, 60000
-        run_and_measure_algorithms(output_dir,  'snkdiff_sample_size.csv', logs_manager_, 2,
-                                   traces_to_sample=[-1, 100, 1000, 2000])  # , 500, 1000, 5000, 10000, 50000]) ## 100, 1000, 10000, 50000
-
-    if logs_exp:  # Experiment_setup VARYING LOGS!
-        print("==== RUNNING NUMBER_OF_LOGS EXPERIMENTS ====")
-        run_and_measure_algorithms(output_dir,  'snkdiff_num_logs.csv', logs_manager_, 2, models_2_fetch=[2, 4, 6, 8])
-
-    ## run and time s2kdiff
-    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=1, ks=[2, 3, 4], min_diffs=[0.05], alphas=[0.05], \
-    #                                 traces_to_sample=[100, 1000, 10000, 50000], models2fetch_arr = [2],  repetitions = 10, experiment_set_id = experiment_set_id)
-    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=1, ks=[2], min_diffs=[0.05], alphas=[0.05], \
-    #                                 traces_to_sample=[100], models2fetch_arr=[2], repetitions=2, experiment_set_id=experiment_set_id)
-    # output_folder = output_folder + "/" + experiment_set_id
-    # create_folder_if_missing(output_folder)
-
-    # df.to_csv(output_folder + '/s2kdiff.csv', index=False)
-    # print("DONE RUNNING 2KDIFF")
-    ## run and time snkdiff
-    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=2, ks=[2, 3, 4], min_diffs=[0.05], alphas=[0.05], \
-    #                                 traces_to_sample=[100, 1000, 10000, 50000],
-    #                                 models2fetch_arr=[2, 4, 6, 8], repetitions=10, experiment_set_id=experiment_set_id)
-    # df = run_and_measure_algorithms(logs_manager, run_s2kdiff=2, ks=[2], min_diffs=[0.05], alphas=[0.05], \
-    #                                 traces_to_sample=[100], models2fetch_arr=[4], repetitions=2,
-    #                                 experiment_set_id=experiment_set_id)
-    # df.to_csv(output_folder + '/snkdiff.csv', index=False)
-    # print("DONE RUNNING 2NKDIFF")
-
 
 if __name__ == '__main__':
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     output_dir = '../../evaluation/results/time/models/'
     configuration_file = "../../evaluation/configuration_files/models_input_configuration.json"
     logs_manager = ModelBasedLogsManager(configuration_file)
-    run_time_measurements(logs_manager, output_dir, k_exp=False, diff_exp=False, sample_exp=False, logs_exp=False, alpha=True)
+    run_time_measurements(logs_manager, output_dir, k_exp=True, diff_exp=True, sample_exp=True, logs_exp=True, alpha=True)
 
     # run_time_measurements(logs_manager, k_exp=True, diff_exp=True, sample_exp=True, logs_exp=True, alpha=True)
 

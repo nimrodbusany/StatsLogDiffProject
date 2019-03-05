@@ -141,6 +141,8 @@ def run_s2kdiff_overlay_step(alg, log_a, k, ktails_a, ktails_b, sig_diffs):
 
 def measure_algorithms(alpha, k, logs_batch, min_diff, run_s2kdiff): ## TODO CALL CODE FROM MAIN!!!
 
+    if run_s2kdiff not in [1, 2]:
+        raise ('use 1 for 2skdiff; 2 for nskdiff')
     ## repeat the experiment for m randomally selected logs
     stat_alg_start_time = datetime.now()
     alg = MultipleSLPDAnalyzer(logs_batch.logs)
@@ -159,7 +161,7 @@ def measure_algorithms(alpha, k, logs_batch, min_diff, run_s2kdiff): ## TODO CAL
             else:
                 sig_diffs.append(item)
     stat_alg_time = (datetime.now() - stat_alg_start_time).total_seconds()
-    if run_s2kdiff:
+    if run_s2kdiff==1:
         iter_ = iter(logs_batch.logs)
         first_log_id = next(iter_)
         first_log = logs_batch.logs[first_log_id]
@@ -178,12 +180,12 @@ def measure_algorithms(alpha, k, logs_batch, min_diff, run_s2kdiff): ## TODO CAL
         try:
             run_s2kdiff_overlay_step(alg, first_log, k, ktails, ktails2, sig_diffs)
             missing_from_both_logs=False
-        except ValueError as error:
+        except (ValueError, KeyError) as error:
             exception_ = error
         try:
-            run_s2kdiff_overlay_step(alg, second_log, k, ktails, ktails2, sig_diffs)
+            run_s2kdiff_overlay_step(alg, second_log, k, ktails2, ktails, sig_diffs)
             missing_from_both_logs = False
-        except ValueError as error:
+        except (ValueError, KeyError) as error:
             exception_ = error
         if missing_from_both_logs:
             print ('smthing went wrong, no coverring trace in both logs for diff!')
@@ -199,6 +201,9 @@ def measure_algorithms(alpha, k, logs_batch, min_diff, run_s2kdiff): ## TODO CAL
                               add_dummy_terminal=False)
         ktails_time = (datetime.now() - ktails_start_time).total_seconds()
         overlay_start_time = datetime.now()
-        overlay_differences_over_graph(g, sig_diffs)
+        if len(sig_diffs) > 0:
+            overlay_differences_over_graph(g, sig_diffs, min_diff)
+        else:
+            print('no diffs found')
         overlay_time = (datetime.now() - overlay_start_time).total_seconds()
     return ktails_time, overlay_time, stat_alg_time
