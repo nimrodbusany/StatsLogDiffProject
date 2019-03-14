@@ -1,6 +1,8 @@
 import numpy as np
 from src.graphs.graphs import DGraph
 from src.main.config import RESULTS_PATH
+from src.ktails.ktails import INIT_LABEL, TERM_LABEL
+
 
 class LogGenerator:
 
@@ -21,7 +23,6 @@ class LogGenerator:
 
         if len(self.init_nodes) == 0:
             raise AssertionError('To generate a trace, at least one node must be provided!')
-
 
     def _generate_single_split_model(cls, split_bias_probability=0.0):
         '''
@@ -134,14 +135,14 @@ class LogGenerator:
         return elements[ind]
 
     @classmethod
-    def produce_log_from_single_model(cls, model, bias = 0.0, size_ =10, add_dummy_initial= True, add_dummy_terminal= True):
+    def produce_log_from_single_model(cls, model, size_ =10, add_dummy_initial= True, add_dummy_terminal= True):
         traces = []
         for i in range(size_):
             t = cls._generate_trace(model)
             if add_dummy_initial:
-                t.insert(0, 'I')
+                t.insert(0, INIT_LABEL)
             if add_dummy_terminal:
-                t.append('T')
+                t.append(TERM_LABEL)
             traces.append(tuple(t))
         return traces
 
@@ -158,19 +159,13 @@ class LogGenerator:
             :return:
             '''
         g = cls._generate_single_split_model(bias)
-        return cls.produce_log_from_single_split_models(g, bias, size_ , add_dummy_initial, add_dummy_terminal)
+        return cls.produce_log_from_single_model(g, bias, size_ , add_dummy_initial, add_dummy_terminal)
 
 
     @classmethod
     def produce_toy_logs(cls, bias= 0.1, N=1000):
         '''
-        produce a toy logs from two models, one completely random choice, the other with a bias
-        a, b
-        # a, c
-        # d->e
-        # d->f
-        # g->j
-        # g->h
+        produce a toy logs from two ktails_models, one completely random choice, the other with a bias
         :return:  two logs according to distrubutions, first with no bias, second with bias.
         '''
         if bias < 0 or bias > 0.5:

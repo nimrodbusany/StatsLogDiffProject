@@ -90,7 +90,7 @@ def compute_k_sequence_transition_probabilities(model, k):
 
 def ksequence_analytics_of_stamina(k):
 
-    MODELS_PATH = '../../models/stamina/'
+    MODELS_PATH = '../../ktails_models/stamina/'
     LOGS_OUTPUT_PATH = '../../data/logs/stamina/'
     models = ['ctas.net.simplified.no_loops.dot', 'cvs.net.no_loops.dot','roomcontroller.simplified.net.dot',
               'ssh.net.simplified.dot', 'tcpip.simplified.net.dot', 'zip.simplified.dot']
@@ -111,16 +111,16 @@ def ksequence_analytics_of_stamina(k):
 
 
 def ksequence_analytics_of_pardel(k): ## TODO
-    PARDEL_PATH = '../../models/pradel/'
+    PARDEL_PATH = '../../ktails_models/pradel/'
     pass
 
 
 def ksequence_analytics_of_david(k): ## TODO
-    PARDEL_PATH = '../../models/david/'
+    PARDEL_PATH = '../../ktails_models/david/'
     pass
 
 def ksequence_analytics_of_zeller(k): ## TODO
-    PARDEL_PATH = '../../models/david/'
+    PARDEL_PATH = '../../ktails_models/david/'
     pass
 
 

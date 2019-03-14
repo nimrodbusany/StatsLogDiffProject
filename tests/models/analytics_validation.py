@@ -7,7 +7,7 @@ from protocol_models_to_logs import produce_logs_from_stamina
 def validate_stamina():
 
 
-    MODELS_PATH = '../../models/stamina/'
+    MODELS_PATH = '../../ktails_models/stamina/'
     LOGS_OUTPUT_PATH = '../../data/logs/stamina/'
 
     models = ['ctas.net.simplified.no_loops.dot', 'cvs.net.no_loops.dot', 'roomcontroller.simplified.net.dot',

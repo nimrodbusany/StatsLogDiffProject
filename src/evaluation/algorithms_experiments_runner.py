@@ -132,12 +132,12 @@ def run_skdiffs(logs_manager, algorithm, ks, min_diffs, alphas, traces_to_sample
 def run_s2kdiff_overlay_step(alg, log_a, k, ktails_a, ktails_b, sig_diffs):
 
     transition_prob1, transition_prob2 = ktails_a.infer_transition_probabilities(), ktails_b.infer_transition_probabilities()
-    diffs2covering_traces = alg.find_covering_traces(sig_diffs, transition_prob1, transition_prob2,log_a, k)  ## TODO
+    diffs2covering_traces = alg.find_covering_traces(sig_diffs, transition_prob1, transition_prob2, log_a, k)  ## TODO
     ktails_a.overlay_transition_probabilities_over_graph()
     ktails_b.overlay_transition_probabilities_over_graph()
     if len(sig_diffs) > 0:
-        ktails_a.overlay_trace_over_graph(sig_diffs[0], diffs2covering_traces[0])  ## TODO: missing pvalue, bolden diff
-
+        if 0 in diffs2covering_traces:
+            ktails_a.overlay_trace_over_graph(sig_diffs[0], diffs2covering_traces[0])  ## TODO: missing pvalue, bolden diff
 
 def measure_algorithms(alpha, k, logs_batch, min_diff, run_s2kdiff): ## TODO CALL CODE FROM MAIN!!!
 

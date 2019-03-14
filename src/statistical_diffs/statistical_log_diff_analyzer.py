@@ -172,7 +172,7 @@ class MultipleSLPDAnalyzer:
         def is_diff_in_trace(diff, trace, k):
             transition = from_diff_to_trantision(diff)
             for i in range(len(trace)):
-                if transition  == trace[i: i + k + 1]:
+                if transition == trace[i: i + k + 1]:
                     return True
             return False
 

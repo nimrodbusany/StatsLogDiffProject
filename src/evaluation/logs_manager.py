@@ -21,17 +21,16 @@ class ExperimentBatch:
 class LogsManager:
 
     def __init__(self, write_logs=False):
-        self.current_model_id = 0
+        self.current_group_id = 0
         self.write_logs = False
 
     def get_next_logs_batch(self):
         raise NotImplemented('This method should be implemented by sub-classes')
 
     def reset(self):
-        self.current_model_id = 0
+        self.current_group_id = 0
 
-
-class RealWorldLogsManager(LogsManager):
+class RealWorldLogsManager(LogsManager): ## TODO: simliar to the models manager, consider adding support of multiple log groups
 
     def __init__(self, logs_json_path, write_logs=False):
 
@@ -41,7 +40,7 @@ class RealWorldLogsManager(LogsManager):
 
         self.log_set_name = ""
         if "log_set_name" in content:
-            self.log_set_name =  content["log_set_name"]
+            self.log_set_name = content["log_set_name"]
 
         self.output_path = None
         if 'logs_output_path' in content:
@@ -55,13 +54,18 @@ class RealWorldLogsManager(LogsManager):
 
     def get_next_logs_batch(self, k, logs2fetch=2, traces2produce=-1, batch_id = ""):
 
+        if self.current_group_id:
+            return
+
         logs, true_ksequence_transtion_probabilities = {}, []
         dir_ = self.output_path + "/" + batch_id + "/"
         if self.write_logs:
             create_folder_if_missing(dir_)
 
+        logs_fetched = 0
         for log_id in self.logs:
-
+            if logs_fetched >= logs2fetch:
+                break
             traces = self.logs[log_id]
             if traces2produce != -1: ## if sampling, sample, run_mle, write_logs
                 traces = sample_traces(traces, traces2produce)
@@ -73,31 +77,39 @@ class RealWorldLogsManager(LogsManager):
                     self.true_ksequence_transtion_probabilities[log_id] = compute_mle_k_future_dict(traces, k)
                 true_ksequence_transtion_probabilities.append(self.true_ksequence_transtion_probabilities[log_id])
             logs[log_id] = traces
+            logs_fetched += 1
 
-        self.current_model_id += 1
+        self.current_group_id = 1
         return ExperimentBatch(logs, true_ksequence_transtion_probabilities, self.log_set_name)
 
 
 class ModelBasedLogsManager(LogsManager):
 
     def __init__(self, models_json_path, write_logs=False):
+        '''
+
+        :param models_json_path:
+        :param write_logs:
+        '''
         super(ModelBasedLogsManager, self).__init__(write_logs)
         self.models = json.load(open(models_json_path))["models"]
 
     def get_next_logs_batch(self, k, logs2fetch=2, traces2produce=100, batch_id=""):
 
-        if self.current_model_id == len(self.models):
+        if self.current_group_id == len(self.models):
             return
 
-        models_info = self.models[self.current_model_id]
+        models_info = self.models[self.current_group_id]
         print('processing', models_info["model"])
         logs, true_ksequence_transtion_probabilities = {}, []
 
         dir_ = models_info["logs_output_path"] + "/" + batch_id + "/"
         if self.write_logs:
             create_folder_if_missing(dir_ )
-
+        logs_fetched = 0
         for j in range(logs2fetch):
+            if logs_fetched >= logs2fetch:
+                break
             ## use existing model to produce log
             model_path = models_info["model_folder"] + "/" + models_info["fname"]
             retries = 0
@@ -120,6 +132,7 @@ class ModelBasedLogsManager(LogsManager):
             ## compute k_sequences transition probabilities
             k_seqs2k_seqs = compute_k_sequence_transition_probabilities(model, k)
             true_ksequence_transtion_probabilities.append(k_seqs2k_seqs)
+            logs_fetched+=1
 
-        self.current_model_id += 1
+        self.current_group_id += 1
         return ExperimentBatch(logs, true_ksequence_transtion_probabilities, models_info["model"])

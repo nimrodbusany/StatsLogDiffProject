@@ -1,7 +1,4 @@
 import networkx as nx
-import src.ktails.graph_filtering
-
-from src.logs_parsers.bear_log_parser import BearLogParser
 from src.utils.project_constants import *
 
 INIT_LABEL = '"init"'
@@ -54,9 +51,9 @@ class kTailsRunner:
         for tr_id in range(len(self.traces)):
             t = self.traces[tr_id]
             if add_dummy_init:
-                t.insert(0, INIT_LABEL)
+                t = tuple([INIT_LABEL] + list(t))
             if add_dummy_terminal:
-                t.append(TERM_LABEL)
+                t = tuple(list(t) + [TERM_LABEL])
             for i in range(len(t)):
                 # if i == 0: ## do not unify futures of dummy init
                 #     ftr = tuple([t[0]])
@@ -79,7 +76,7 @@ class kTailsRunner:
 
         pasts2id = {}
         for ftr in pasts_equiv:
-            pasts = sorted(list(pasts_equiv[ftr]))
+            pasts = tuple(sorted(list(pasts_equiv[ftr])))
             if pasts in pasts2id:
                 ## is seen past equiv class in the past, use existing id
                 ftr2equiv_classes[ftr] = pasts2id[pasts]
@@ -129,7 +126,7 @@ class kTailsRunner:
                 tar_src = (self.ftr2equiv_classes[ftr], self.ftr2equiv_classes[ftr2])
                 self.ftr2transitions[(ftr, ftr2)] = tar_src
                 edge_data = edges_dic.get(tar_src)
-                edge_label = [ftr[0] if ftr else ""]
+                edge_label = tuple([ftr[0] if ftr else ""])
                 edge_traces = self.states2transitions2traces[ftr][ftr2]
                 if edge_data is None:
                     label2traces = {edge_label[0]: edge_traces.copy()}
@@ -179,8 +176,12 @@ class kTailsRunner:
     def run_ktails(self, use_traces_as_set=False, add_dummy_init=True, add_dummy_terminal=True, graph_simplification=0):
         ''' 0- no past simplification, 1- simplify by graph, 2 - simplify by ks '''
         ## generate equiv classes
-        self.generate_equivalent_maps(False, add_dummy_init, add_dummy_terminal)
-        self.g = self.construct_graph_from_futures(use_traces_as_set=use_traces_as_set, pasts_equiv=None)
+        if graph_simplification==0:
+            self.generate_equivalent_maps(False, add_dummy_init, add_dummy_terminal)
+            self.g = self.construct_graph_from_futures(use_traces_as_set=use_traces_as_set, pasts_equiv=None)
+        else:
+            ftr2ftrs, ftr2past, states2transitions2traces = self.generate_equivalent_maps(True, add_dummy_init, add_dummy_terminal)
+            self.g = self.construct_graph_from_futures(use_traces_as_set=use_traces_as_set, pasts_equiv=ftr2past)
         return self.g.copy()
 
     def infer_transition_probabilities(self):
@@ -285,91 +286,5 @@ class kTailsRunner:
         for tr in self.log:
             new_log.append(list(tr))
         return new_log
-
-
-if __name__ == '__main__':
-
-    ## read log
-    # k = 11
-    # ks = [20, 40, 80]
-    # ks = [1, 2, 3, 4, 6, 8, 10]
-    LOG_SUFFIX = '.log'
-    MODEL_SUFFIX = '_model.dot'
-    LOG_PATH = '../../data/bear/findyourhouse_long.log'
-    LOG_OUT_PATH = '../../data/bear/filtered_logs/'
-    GRAPH_OUTPUT = "../../data/bear_models/bear_models"
-    ks = [1]
-    log_parser = BearLogParser(LOG_PATH)
-    traces = log_parser.process_log(True)
-    # log1_traces = log_parser.get_traces_of_browser(traces, "Mozilla/4.0")
-    # log2_traces = log_parser.get_traces_of_browser(traces, "Mozilla/5.0")
-    # log1_filename = 'mozzila4'
-    # log2_filename = 'mozzila5'
-
-    log1_filename = 'desktop'
-    log2_filename = 'mobile'
-    log1_traces = log_parser.get_desktop_traces(traces)
-    log2_traces = log_parser.get_mobile_traces(traces)
-
-    # events2keep = set(['search','sales_anncs',
-    #                    'sales_page, facebook',
-    #                    'sales_page, page_1',
-    #                    'sales_page, page_2',
-    #                    'sales_page, page_3',
-    #                    'sales_page, page_4',
-    #                    'sales_page, page_5',
-    #                    'sales_page, page_6',
-    #                    'sales_page, page_7',
-    #                    'sales_page, page_8',
-    #                    'sales_page, page_9',
-    #                    ])
-    # filter_traces_mozilla4 = log_parser.filter_events(events2keep, mozilla4_traces, True)
-    # filter_traces_mozilla5 = log_parser.filter_events(events2keep, mozilla5_traces, True)
-
-    new_name_mapping = {'sales_page, page_1': 'sales_page', 'sales_page, page_2': 'sales_page', 'sales_page, page_3': 'sales_page',
-    'sales_page, page_4': 'sales_page', 'sales_page, page_5': 'sales_page', 'sales_page, page_6': 'sales_page',
-    'sales_page, page_7': 'sales_page', 'sales_page, page_8': 'sales_page', 'sales_page, page_9': 'sales_page',
-                        'renting_page, page_1': 'renting_page', 'renting_page, page_2': 'renting_page',
-                        'contacts_requested': 'contact_requested'}
-
-    filter_traces_log1 = log_parser.abstract_events(new_name_mapping, log1_traces)
-    filter_traces_log2 = log_parser.abstract_events(new_name_mapping, log2_traces)
-
-    log1_traces = log_parser.get_traces_as_lists_of_event_labels(filter_traces_log1)
-    log2_traces = log_parser.get_traces_as_lists_of_event_labels(filter_traces_log2)
-
-    from log_writer import LogWriter
-    LogWriter.write_log(log1_traces, LOG_OUT_PATH + log1_filename + LOG_SUFFIX)
-    LogWriter.write_log(log2_traces, LOG_OUT_PATH + log2_filename + LOG_SUFFIX)
-    # mozilla4_traces = change_tuples_to_list(mozilla4_traces)
-    # mozilla5_traces = change_tuples_to_list(mozilla5_traces)
-    # traces = log_parser.get_traces_as_lists_of_event_labels
-
-    for k in ks:
-        ktail_runner_4 = kTailsRunner(log1_traces, k)
-        ktail_runner_5 = kTailsRunner(log2_traces, k)
-        ktail_runner_4.run_ktails(GRAPH_OUTPUT, log1_filename + MODEL_SUFFIX)
-        ktail_runner_5.run_ktails(log2_traces, k, GRAPH_OUTPUT, log2_filename + MODEL_SUFFIX).g
-        g4 = ktail_runner_4.get_graph()
-        g5 = ktail_runner_5.get_graph()
-
-        filtering_str = ""
-        low_probability_filter = None  ##  0.05
-        if low_probability_filter:
-            print("FILTER APPLIED: low prob filter!")
-            g4 = graph_filtering.filter_low_probability_transitions(g4, low_probability_filter)
-            g5 = graph_filtering.filter_low_probability_transitions(g5, low_probability_filter)
-            filtering_str += "_lp_" + str(low_probability_filter)
-
-        simple_filter = 20
-        if simple_filter:
-            print("FILTER APPLIED: simple filter!")
-            g4 = graph_filtering.simple_filter_graph(g4, simple_filter, False)
-            g5 = graph_filtering.simple_filter_graph(g5, simple_filter, False)
-            filtering_str += "_sim_" + str(simple_filter)
-
-        ktail_runner_4.write2file(GRAPH_OUTPUT + log1_filename + filtering_str + '_k' + str(k) + DOT_SUFFIX)
-        ktail_runner_5.write2file(GRAPH_OUTPUT + log2_filename + filtering_str + '_k' + str(k) + DOT_SUFFIX)
-        print("done running with k=", k)
 
 

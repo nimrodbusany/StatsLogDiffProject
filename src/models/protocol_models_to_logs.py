@@ -97,7 +97,7 @@ class ProtocolModel:
 
 def produce_logs_from_stamina(traces2produce, models2produce):
 
-    MODELS_PATH = '../../models/stamina/'
+    MODELS_PATH = '../../ktails_models/stamina/'
     LOGS_OUTPUT_PATH = '../../data/logs/stamina/'
     models = ['ctas.net.simplified.no_loops.dot', 'cvs.net.no_loops.dot', 'roomcontroller.simplified.net.dot',
               'ssh.net.simplified.dot', 'tcpip.simplified.net.dot', 'zip.simplified.dot']
@@ -120,7 +120,7 @@ def produce_logs_from_stamina(traces2produce, models2produce):
 
 
 def produce_logs_from_david(traces2produce, models2produce):
-    MODELS_PATH = '../../models/david/'
+    MODELS_PATH = '../../ktails_models/david/'
     LOGS_OUTPUT_PATH = '../../data/logs/david/'
     models = ['Columba.simplified.dot', 'Heretix.simplified.dot', 'JArgs.simplified.dot',
               'Jeti.Simplified.dot', 'jfreechart.Simplified.dot', 'OpenHospital.Simplified.dot',

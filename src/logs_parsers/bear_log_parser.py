@@ -1,7 +1,7 @@
 from datetime import datetime
 
-import src.bear.url_filter
-import src.bear.user_class_mapper
+import src.bear.url_filter as url_filter
+import src.bear.user_class_mapper as user_class_mapper
 from src.bear.bear_event import BEAREvent
 from src.bear.url_mapper import *
 

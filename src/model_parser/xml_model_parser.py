@@ -97,7 +97,7 @@ def from_david_xml_to_dgraph(path):
     return graph
 
 if __name__ == '__main__':
-    path = 'C:/Users/USER/PycharmProjects/StatsLogDiffProject/models/david/jfreechart.xml'
+    path = 'C:/Users/USER/PycharmProjects/StatsLogDiffProject/ktails_models/david/jfreechart.xml'
     output_path = 'jfreechart.dot'
     graph = from_david_xml_to_dgraph(path)
     # graph = from_zeller_xml_to_dgraph(path)

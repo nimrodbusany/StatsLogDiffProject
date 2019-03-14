@@ -6,7 +6,7 @@ from protocol_models_to_logs import ProtocolModel
 from main.log_diff_runner import run
 from src.utils.project_constants import *
 
-MODELS_PATH = '../../models/stamina/cvs.net.dot'  ## ordSet.net.dot
+MODELS_PATH = '../../ktails_models/stamina/cvs.net.dot'  ## ordSet.net.dot
 LOGS_OUTPUT_PATH = '../../data/logs/example/cvs/'  ## ordset
 RESULTS_OUTPUT_PATH = LOGS_OUTPUT_PATH + '/output/'
 

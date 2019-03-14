@@ -61,6 +61,8 @@ def distance_based_grouping(logs_sorted_by_proportion, required_diff):
 
 def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, coloring_scheme=False):
 
+    if len(sig_diffs) == 0:
+        return
     colors, stats, statstics_val = {}, {}, {}
     import networkx as nx
     labels = nx.get_node_attributes(g, 'label')
@@ -103,7 +105,6 @@ def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, colo
             colors[(src_id, trg_id)] = 'red' if p1 > p2 else 'green'
     nx.set_edge_attributes(g, colors, 'color')
     edge_labels = nx.get_edge_attributes(g, 'label')
-    print(statstics_val)
     min_statistic = min(statstics_val.items(), key=lambda v: v[1])[1]
     max_statistic = max(statstics_val.items(), key=lambda v: v[1])[1]
     pen_widths = {}

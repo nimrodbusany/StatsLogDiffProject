@@ -19,8 +19,6 @@ class ExperimentResult:
         p2 = transition_probabilities.get(j, 0)
         real_diff = abs(p1 - p2)
 
-        if i > j:
-            raise ValueError("expecting paired comparisons to be performed from lower to upper index")
         pair = sampled_diffs[PAIRWISE_COMPARISON_ATTR_NAME].get((i, j))
         if real_diff > min_diff: ## handle positive instances
             if pair and pair[SIGNIFICANT_DIFF_ATTR_NAME]:

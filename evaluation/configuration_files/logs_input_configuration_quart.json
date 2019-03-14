@@ -1,0 +1,23 @@
+{
+  "logs": [
+        {
+            "id": "Q1",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/Q1.log"
+        },
+        {
+            "id": "Q2",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/Q2.log"
+        },
+        {
+            "id": "Q3",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/Q3.log"
+        },
+        {
+            "id": "Q4",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/Q4.log"
+        }
+    ],
+
+    "logs_output_path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/evaluation/results/bear/",
+    "log_set_name": "bear"
+}
