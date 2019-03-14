@@ -1,0 +1,47 @@
+{
+  "logs": [
+        {
+            "id": "12_1",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_1.log"
+        },
+        {
+            "id": "12_2",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_2.log"
+        },
+        {
+            "id": "12_3",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_3.log"
+        },
+        {
+            "id": "12_4",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_4.log"
+        },
+        {
+            "id": "12_5",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_5.log"
+        },
+        {
+            "id": "12_6",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_6.log"
+        },
+        {
+            "id": "12_7",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_7.log"
+        },
+        {
+            "id": "12_8",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_8.log"
+        },
+        {
+            "id": "12_9",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_9.log"
+        },
+        {
+            "id": "12_10",
+            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/2012_10.log"
+        }
+
+    ],
+    "logs_output_path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/evaluation/results/bear/",
+    "log_set_name": "bear"
+}

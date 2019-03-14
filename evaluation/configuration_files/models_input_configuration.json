@@ -1,0 +1,82 @@
+{
+  "models" : [
+  {
+    "model": "ctas",
+    "fname": "ctas.net.simplified.no_loops.dot",
+    "model_folder": "../../models/stamina/",
+    "logs_output_path": "../../data/logs/stamina/ctas/"
+  },
+  {
+    "model": "csv",
+    "fname": "cvs.net.no_loops.dot",
+    "model_folder": "../../models/stamina/",
+    "logs_output_path": "../../data/logs/stamina/csv/"
+  },
+    {
+    "model": "roomcontroller",
+    "fname": "roomcontroller.simplified.net.dot",
+    "model_folder": "../../models/stamina/",
+    "logs_output_path": "../../data/logs/stamina/roomcontroller/"
+  },
+    {
+      "model": "ssh",
+    "fname": "ssh.net.simplified.dot",
+    "model_folder": "../../models/stamina/",
+    "logs_output_path": "../../data/logs/stamina/ssh/"
+  },
+    {
+      "model": "tcpip",
+    "fname": "tcpip.simplified.net.dot",
+    "model_folder": "../../models/stamina/",
+    "logs_output_path": "../../data/logs/stamina/tcpip/"
+  },
+    {
+      "model": "columba",
+    "fname": "Columba.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/Columba/"
+  },
+    {
+      "model": "Heretix",
+    "fname": "Heretix.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/Heretix/"
+  },
+    {
+      "model": "JArgs",
+    "fname": "JArgs.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/JArgs/"
+  },
+    {
+      "model": "Jeti",
+    "fname": "Jeti.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/Jeti/"
+  },
+    {
+      "model": "jfreechart",
+    "fname": "jfreechart.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/jfreechart/"
+  },
+    {
+      "model": "OpenHospital",
+    "fname": "OpenHospital.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/OpenHospital/"
+  },
+    {
+      "model": "RapidMiner",
+    "fname": "RapidMiner.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/RapidMiner/"
+  },
+     {
+      "model": "tagsoup",
+    "fname": "tagsoup.simplified.dot",
+    "model_folder": "../../models/david/",
+    "logs_output_path": "../../data/logs/david/tagsoup/"
+  }
+  ]
+}
