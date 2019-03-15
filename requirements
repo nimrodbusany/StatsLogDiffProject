@@ -1,1 +1,7 @@
 statsmodels>=0.8.0
+pandas
+networkx
+PySimpleAutomata
+pyyaml
+scipy
+pydot
