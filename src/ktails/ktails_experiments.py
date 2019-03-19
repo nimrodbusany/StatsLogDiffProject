@@ -106,15 +106,9 @@ def bear_based_experiments():
         print("done running with k=", k)
 
 
-def csv_based_experiments():
+def log_based_experiments(log_path, ks, output_dir, model_name):
 
-    LOG_SUFFIX = '.log'
-    MODEL_SUFFIX = '_model.dot'
-    LOG_PATH = '../../data/logs/example/cvs/l0.log'
-    GRAPH_OUTPUT = "../../data/logs/example/cvs/ktails_models/"
-    ks = [7]
-
-    traces = SimpleLogParser.read_log(LOG_PATH)
+    traces = SimpleLogParser.read_log(log_path)
     traces_tups = []
     for tr in traces:
         traces_tups.append(tuple(tr))
@@ -127,11 +121,26 @@ def csv_based_experiments():
         ktail_runner_past.run_ktails(add_dummy_init=True, add_dummy_terminal=True, graph_simplification=1)
         g1 = ktail_runner_.get_graph()
         g2 = ktail_runner_past.get_graph()
-        ktail_runner_.write2file(GRAPH_OUTPUT + 'csv_' + str(k) + "_" + MODEL_SUFFIX)
-        ktail_runner_past.write2file(GRAPH_OUTPUT + 'csv_past_' + str(k) + "_" + MODEL_SUFFIX)
+        ktail_runner_.write2file(output_dir + model_name + '_' + str(k) + ".dot" )
+        ktail_runner_past.write2file(output_dir + model_name + '_past_' + str(k) + ".dot")
         print(len(g1.nodes()), len(g2.nodes()), len(g1.edges()), len(g2.edges()))
 
 if __name__ == '__main__':
 
     # bear_based_experiments()
-    csv_based_experiments()
+    # MODEL_NAME = 'csv'
+    # LOG_PATH = '../../data/logs/example/cvs/l0.log'
+    # GRAPH_OUTPUT = "../../data/logs/example/cvs/ktails_models/"
+    # ks = [10]
+    # log_based_experiments(LOG_PATH, ks, GRAPH_OUTPUT, MODEL_NAME)
+
+    experiments = []
+    # exp0 = ['../../data/logs/example/cvs/l0.log', [10], 'csv', "../../data/logs/example/cvs/ktails_models/"]
+    # experiments.append(exp0)
+    exp1 = ['../../data/bear/desktop.log', [5], 'desktop', "../../data/bear/ktails_models/"]
+    experiments.append(exp1)
+    exp2 = ['../../data/bear/mobile.log', [5], 'mobile', "../../data/bear/ktails_models/"]
+    experiments.append(exp2)
+
+    for log_path, ks, model_name, output_path in experiments:
+        log_based_experiments(log_path, ks, output_path, model_name)

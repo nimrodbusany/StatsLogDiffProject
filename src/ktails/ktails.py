@@ -1,8 +1,8 @@
 import networkx as nx
 from src.utils.project_constants import *
 
-INIT_LABEL = '"init"'
-TERM_LABEL = '"term"'
+INIT_LABEL = 'init'
+TERM_LABEL = 'term'
 DOT_SUFFIX = ".dot"
 
 class KSequence: ## TODO incorporate to code; make object hashable
@@ -64,7 +64,8 @@ class kTailsRunner:
                 _update_ftr2ftr(ftr, next_ftr)
                 _update_transitions2traces(ftr, next_ftr, tr_id)
                 if gen_past:
-                    past_ftr = t[max(0, i-self.k):i]
+                    # past_ftr = t[max(0, i-self.k):i]
+                    past_ftr = t[max(0,i-1):i+self.k-1]
                     _update_ftr2pasts(ftr, past_ftr)
             tr_id += 1
 
