@@ -14,7 +14,7 @@ def check_relation(nfa1, nfa2):
     :param nfa2: nfa
     :return: - 1 if model1 includes model 2
              - -1 if model2 includes model 1
-             - 0 if the models are equal
+             - 0 if the ktails_models are equal
              - otherwise
     '''
     dfa1 = NFA.nfa_determinization(nfa1)
@@ -39,46 +39,19 @@ def check_relation(nfa1, nfa2):
     else:
         return -1
 
+def compare_models(model_path1, model_path2):
+
+    nfa1 = automata_IO.nfa_dot_importer(model_path1)
+    nfa2 = automata_IO.nfa_dot_importer(model_path2)
+    print('relation:', check_relation(nfa1, nfa2))
 
 if __name__ == '__main__':
 
-
     path = '../../data/logs/example/cvs/ktails_models/'
-    # read_determinize_minimized_write(output=path, model='csv_std.dot')
-    # check_equivelence(path + "csv_std.dot", path + "csv_std2.dot")
-    # check_equivelence(path + "csv_4__model.dot", path + "csv_5__model.dot")
-    # check_equivelence(path + "csv_5__model.dot", path + "csv_past_5__model.dot")
+    compare_models(path + "cvs.net.dot", path + "csv_10__model.dot")
+    compare_models(path + "cvs.net.dot", path + "csv_past_10__model.dot")
+    compare_models(path + "csv_past_10__model.dot", path + "csv_10__model.dot")
 
-    # nfa1 = automata_IO.nfa_dot_importer(path + "csv_3__model.dot")
-    # nfa2 = automata_IO.nfa_dot_importer(path + "csv_past_3__model.dot")
-    # print('relation:', check_relation(nfa1, nfa2))
-    #
-
-
-    # nfa1 = automata_IO.nfa_dot_importer(path + "csv_10__model.dot")
-    # nfa2 = automata_IO.nfa_dot_importer(path + "csv_past_10__model.dot")
-    # dfa1 = NFA.nfa_determinization(nfa1)
-    # dfa1 = DFA.dfa_minimization(dfa1)
-    # dfa2 = NFA.nfa_determinization(nfa2)
-    # dfa2 = DFA.dfa_minimization(dfa2)
-    # dfa1 = DFA.dfa_co_reachable(dfa1)
-    # dfa2 = DFA.dfa_co_reachable(dfa2)
-    # automata_IO.dfa_to_dot(dfa1, 'csv_10__model' + "_det_min", path)
-    # automata_IO.dfa_to_dot(dfa2, 'csv_10__model_past' + "_det_min", path)
-    # print('relation:', check_relation(nfa1, nfa2))
-
-    nfa1 = automata_IO.nfa_dot_importer(path + "csv_7__model.dot")
-    nfa2 = automata_IO.nfa_dot_importer(path + "csv_past_7__model.dot")
-    nfa3 = automata_IO.nfa_dot_importer(path + "cvs.net.dot")
-    print('relation:', check_relation(nfa1, nfa2))
-    print('relation:', check_relation(nfa1, nfa3))
-    print('relation:', check_relation(nfa2, nfa3))
-
-    # nfa1 = automata_IO.nfa_dot_importer(path + "csv_10__model.dot")
-    # nfa2 = automata_IO.nfa_dot_importer(path + "csv_past_10__model.dot")
-    # print('relation:', check_relation(nfa1, nfa2))
-
-    # check_equivelence(path + "csv_2__model.dot", path + "csv_past_2__model.dot")
-    # check_equivelence(path + "csv_3__model.dot", path + "csv_past_3__model.dot")
-
-
+    # path = '../../data/bear/ktails_models/'
+    # compare_models(path + "desktop_5.dot", path + "desktop_past_5.dot")
+    # compare_models(path + "mobile_5.dot", path + "mobile_past_5.dot")

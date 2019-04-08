@@ -74,16 +74,116 @@ class kTailsRunner:
         return self.ftr2ftrs, self.ftr2past, self.states2transitions2traces
 
     def apply_past_equivelance(self, ftr2equiv_classes, pasts_equiv):
+        ftr2equiv_classes_cpy = ftr2equiv_classes.copy()
+        import time
+        start = time.time()
+        print('starting past minimization')
+        self.apply_past_equivelance_v1(ftr2equiv_classes, pasts_equiv)
+        end = time.time()
+        print('done running v1', (end - start))
+        print('   ---    ')
+        start2 = time.time()
+        self.apply_past_equivelance_v2(ftr2equiv_classes_cpy, pasts_equiv)
+        end2 = time.time()
+        print('done running v2', (end2 - start2))
+        if abs(len(set(ftr2equiv_classes.values())) - len(set(ftr2equiv_classes_cpy.values()))) > self.k:
+            raise Exception("BAD IMPLEMENTATION, YOU FOOL!!!! "  + str(len(set(ftr2equiv_classes.values()))) + " - " +
+                        str(len(set(ftr2equiv_classes_cpy.values()))))
 
-        pasts2id = {}
-        for ftr in pasts_equiv:
-            pasts = tuple(sorted(list(pasts_equiv[ftr])))
-            if pasts in pasts2id:
-                ## is seen past equiv class in the past, use existing id
-                ftr2equiv_classes[ftr] = pasts2id[pasts]
-            else:
-                ## otherwise, define equivalent state id
-                pasts2id[pasts] = ftr2equiv_classes[ftr]
+    def apply_past_equivelance_v1(self, ftr2equiv_classes, pasts_equiv):
+
+        state_backard_transitions = {}
+        state_forward_transitions = {}
+        state2id = {}
+        total_states, total_transitions = len(self.ftr2ftrs), 0
+        starting_states = set()
+        for ftr_state in self.ftr2ftrs:
+            if ftr_state[0] == 'init':
+                starting_states.add(ftr_state)
+            for next_state in self.ftr2ftrs[ftr_state]:
+                state_backard_transitions.setdefault(ftr2equiv_classes[next_state], set()).add(
+                    (ftr2equiv_classes[ftr_state], ftr_state[0]))
+                state_forward_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+                    (ftr2equiv_classes[next_state], ftr_state[0]))
+                state2id[ftr2equiv_classes[ftr_state]] = ftr2equiv_classes[ftr_state]
+                state2id[ftr2equiv_classes[next_state]] = ftr2equiv_classes[next_state]
+                total_transitions += 1
+        for ftr_state in starting_states:
+            state_backard_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+                (0, ftr_state[0]))
+            state_forward_transitions.setdefault(0, set()).add(
+                (ftr2equiv_classes[ftr_state], ftr_state[0]))
+        max_id = max(state2id) + 1
+        states_queue = set(state2id.keys())
+        states_queue.remove(0) ## HACK: remove dummy initial node with not past, find nicer solution
+        minimization_iterations, total_equiv_states_across_rounds = 0, 0
+        states_reads = 0
+        states_seend_coutners = {}
+        while states_queue:
+            states_reads += len(states_queue)
+            minimization_iterations += 1
+            past_equiv_classes = {}
+            for state in states_queue:
+                states_seend_coutners[state] = states_seend_coutners.get(state, 0) + 1
+                state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in state_backard_transitions[state])
+                past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
+            states_queue = set()
+            for equiv_class in past_equiv_classes.values():
+                equiv_id = max_id
+                if len(equiv_class) > 1 and len(set([state2id[st] for st in equiv_class])) > 1:
+                    total_equiv_states_across_rounds += 1
+                    for equiv_state in equiv_class:
+                        state2id[equiv_state] = equiv_id
+                        states_queue.update([tup[0] for tup in state_forward_transitions[equiv_state]])
+                    max_id = max_id + 1
+
+        for state in ftr2equiv_classes:
+            ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
+        print('total states, transitions:', total_states, total_transitions)
+        print('total iterations, states_reads, total equiv states:', minimization_iterations, states_reads, total_equiv_states_across_rounds, max_id)
+        print('max state visits', max(states_seend_coutners.values())) ## , [states_seend_coutners[st] for st in states_seend_coutners if states_seend_coutners[st] > 1]
+
+    def apply_past_equivelance_v2(self, ftr2equiv_classes, pasts_equiv):
+
+
+        state_back_transitions = {}
+        starting_states = set()
+        for ftr_state in self.ftr2ftrs:
+            if ftr_state[0] == 'init':
+                starting_states.add(ftr_state)
+            for next_state in self.ftr2ftrs[ftr_state]:
+                state_back_transitions.setdefault(ftr2equiv_classes[next_state], set()).add((ftr2equiv_classes[ftr_state], ftr_state[0]))
+
+        for ftr_state in starting_states:
+            state_back_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+                (0, ftr_state[0]))
+
+        max_id = max(ftr2equiv_classes.values()) + 1
+        state2id = dict([(v, v) for v in ftr2equiv_classes.values()])
+        iterate = True
+        past_equiv_classes = {}
+        minimization_iterations, total_equiv_states_across_rounds, seen_states = 0 , 0, 0
+        while iterate:
+            minimization_iterations+=1
+            prev_equiv_classes = past_equiv_classes.copy()
+            iterate = False
+            for state in state_back_transitions:
+                state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in state_back_transitions[state])
+                past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
+            seen_states += len(state_back_transitions)
+            for equiv_state in past_equiv_classes:
+                if past_equiv_classes.get(equiv_state, set()) != prev_equiv_classes.get(equiv_state, set()):
+                    if len(past_equiv_classes[equiv_state]) > 1 and len(set([state2id[st] for st in past_equiv_classes[equiv_state]])) > 1:
+                        total_equiv_states_across_rounds+=1
+                        max_id += 1
+                        for state in past_equiv_classes[equiv_state]:
+                            state2id[state] = max_id
+                        iterate = True
+
+
+        for state in ftr2equiv_classes:
+            ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
+        print('total iterations, total equiv states, seen_states', minimization_iterations, total_equiv_states_across_rounds, seen_states)
 
     def construct_graph_from_futures(self, use_traces_as_set = False, pasts_equiv = None):
 
@@ -98,7 +198,7 @@ class kTailsRunner:
         self.ftr2equiv_classes[tuple()] = len(self.ftr2equiv_classes)
         if pasts_equiv:
             self.apply_past_equivelance(self.ftr2equiv_classes, pasts_equiv)
-        g = nx.DiGraph()
+        g = nx.MultiDiGraph()
         init_id = -1
         for ftr in self.ftr2equiv_classes:
             id = self.ftr2equiv_classes[ftr]
@@ -118,47 +218,42 @@ class kTailsRunner:
             else:
                 g.add_node(id, label=ftr)
 
-        self.ftr2transitions = {}
         ## add transitions, labels, weights
         edges_dic = {}
         for ftr in self.ftr2ftrs:
             for ftr2 in self.ftr2ftrs[ftr]:
 
                 tar_src = (self.ftr2equiv_classes[ftr], self.ftr2equiv_classes[ftr2])
-                self.ftr2transitions[(ftr, ftr2)] = tar_src
                 edge_data = edges_dic.get(tar_src)
                 edge_label = tuple([ftr[0] if ftr else ""])
                 edge_traces = self.states2transitions2traces[ftr][ftr2]
                 if edge_data is None:
                     label2traces = {edge_label[0]: edge_traces.copy()}
-                    # w = len(label2traces) if not use_traces_as_set else len(set(label2traces))
                     label_transitions_traces = []
                     for l in label2traces:
                         label_transitions_traces.extend(label2traces[l])
                     w = len(label_transitions_traces) if not use_traces_as_set else len(set(label_transitions_traces))
                     edge_data = (edge_label, w, label2traces)
                 else:
-                    if edge_data[0] != edge_label and not pasts_equiv:
-                        raise AssertionError("two states are expected to be connected with "
-                                             "a single labels, but two different appear!")
                     label2traces = edge_data[2]
                     if edge_label in label2traces:
                         label2traces[edge_label].extend(edge_traces)
                     else:
                         label2traces[edge_label] = edge_traces
                     w = get_edge_weight(label2traces, use_traces_as_set)
-                    edge_data = (edge_data[0], w, label2traces)
+                    new_labels_arr = []
+                    new_labels_arr.extend(edge_data[0])
+                    new_labels_arr.extend(edge_label)
+                    edge_data = (list(set(new_labels_arr)), w, label2traces)
+
                 edges_dic[tar_src] = edge_data
 
+        id = 0
         for e, data in edges_dic.items():
-            g.add_edge(e[0], e[1], label=data[0], weight=data[1], traces=data[2])
+            id+=1
+            g.add_edge(e[0], e[1], id, label=data[0], weight=data[1], traces=data[2])
         return g
 
-    def get_ftr_state_id(self, ftr):
-        return self.ftr2transitions.get(ftr)
-
-    def get_transition_state_id(self, ftr, next_ftr):
-        return self.ftr2equiv_classes.get((ftr, next_ftr))
 
     def normalized_transition_count_dict(self, transitions_count):
 

@@ -1,7 +1,13 @@
-import src.ktails.graph_filtering
 from src.logs_parsers.bear_log_parser import BearLogParser
 from src.ktails.ktails import kTailsRunner
 from src.logs_parsers.simple_log_parser import SimpleLogParser
+from src.automaton.KanellakisAndSmolka import KanellakisAndSmolka, coarsen_graph
+from src.automaton.automaton import check_relation
+from PySimpleAutomata import DFA, NFA, automata_IO
+from src.models.protocol_models_to_logs import ProtocolModel, TRANSITION_PROBABILITY_ATTRIBUTE
+from src.logs.log_writer import LogWriter
+from src.models.model_based_log_generator import LogGenerator
+import networkx as nx
 
 
 def bear_based_experiments():
@@ -125,14 +131,7 @@ def log_based_experiments(log_path, ks, output_dir, model_name):
         ktail_runner_past.write2file(output_dir + model_name + '_past_' + str(k) + ".dot")
         print(len(g1.nodes()), len(g2.nodes()), len(g1.edges()), len(g2.edges()))
 
-if __name__ == '__main__':
-
-    # bear_based_experiments()
-    # MODEL_NAME = 'csv'
-    # LOG_PATH = '../../data/logs/example/cvs/l0.log'
-    # GRAPH_OUTPUT = "../../data/logs/example/cvs/ktails_models/"
-    # ks = [10]
-    # log_based_experiments(LOG_PATH, ks, GRAPH_OUTPUT, MODEL_NAME)
+def experiment_1():
 
     experiments = []
     # exp0 = ['../../data/logs/example/cvs/l0.log', [10], 'csv', "../../data/logs/example/cvs/ktails_models/"]
@@ -144,3 +143,91 @@ if __name__ == '__main__':
 
     for log_path, ks, model_name, output_path in experiments:
         log_based_experiments(log_path, ks, output_path, model_name)
+
+
+def simple_runner(traces, k, output_dir, model_name, past_minimization=True, write_dot=False):
+
+    ktail_runner_ = kTailsRunner(traces, k)
+    if past_minimization:
+        ktail_runner_.run_ktails(add_dummy_init=True, add_dummy_terminal=True, graph_simplification=1)
+    else:
+        ktail_runner_.run_ktails(add_dummy_init=True, add_dummy_terminal=True, graph_simplification=0)
+    g1 = ktail_runner_.get_graph()
+    if write_dot:
+        ktail_runner_.write2file(output_dir + model_name + '_' + str(k) + ".dot")
+    return g1
+
+def minimize_nfa(G, path = ""):
+
+    for n1, n2, d in G.edges(data=True):
+        d.pop('traces', None)
+
+    ## to check, user third party module
+    labels = set([x for x in nx.get_edge_attributes(G, 'label').values()])
+    k = KanellakisAndSmolka(labels)
+    g1_r = G.reverse()
+    blocks = k.compute_coarsest_partition(g1_r)
+    g_abs = coarsen_graph(G, blocks)
+
+    ## to check, user third party module
+    nx.drawing.nx_pydot.write_dot(G, path + 'model.dot')
+    nx.drawing.nx_pydot.write_dot(g_abs, path + 'model_minimized.dot')
+    nfa1 = automata_IO.nfa_dot_importer(path + 'model.dot')
+    nfa2 = automata_IO.nfa_dot_importer(path + 'model_minimized.dot')
+
+    print('isBisimilar:', k.isBisimilar(G, g_abs)) ## TODO: understand why graphs are not bisimular!
+    print('IS EQUIV:', check_relation(nfa1, nfa2))
+    if check_relation(nfa1, nfa2) != 0:
+        raise ValueError('not equiv!!!!!')
+    return g_abs
+
+def experiment_2():
+
+    # LOGS SET 1
+    # BASE_DIR = '../../data/logs/example/mktails/paper_example'
+    # LOG_PATH = BASE_DIR + 'mktails_log.log'
+    # traces = SimpleLogParser.read_log(LOG_PATH)
+    # OUTPUT_DIR = '../../data/logs/example/mktails/'
+
+    # LOGS SET 2
+    # BASE_DIR = "../../data/bear/"
+    # LOG_PATH = BASE_DIR + 'desktop.log'
+    # traces = SimpleLogParser.read_log(LOG_PATH)
+    # OUTPUT_DIR = '../../data/logs/example/mktails/bear/'
+
+    # LOGS SET 3
+    # model_path = "C:/Users/USER/PycharmProjects/StatsLogDiffProject/models/stamina/cvs.net.dot"
+    # model = ProtocolModel(model_path, id=0)
+    # log = LogGenerator.produce_log_from_model(model.graph, traces2produce=1000)
+    # LogWriter.write_log(log, "csv.log")
+    traces = SimpleLogParser.read_log('../../data/logs/example/mktails/csv/csv.log')
+    OUTPUT_DIR = '../../data/logs/example/mktails/csv/'
+
+    ks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    for k in ks:
+        print('processing k -- ', k, '--')
+        print('running without past minimization')
+        G = simple_runner(traces, k, OUTPUT_DIR, "mktails", False)
+        print('original graph nodes/edges:', len(G.nodes()), len(G.edges))
+        for n in G.nodes(data=True):
+            n[1].pop('label')
+        minimize_nfa(G, OUTPUT_DIR)
+        print('minimized graph nodes/edges:', len(G.nodes()), len(G.edges))
+        print('running with past minimization')
+        # simple_runner(traces, k, OUTPUT_DIR, "mktails_past", True)
+        print('-----------------------')
+        exit()
+
+def experiment3():
+    pass
+
+if __name__ == '__main__':
+    experiment_2()
+    # bear_based_experiments()
+    # MODEL_NAME = 'csv'
+    # LOG_PATH = '../../data/logs/example/cvs/l0.log'
+    # GRAPH_OUTPUT = "../../data/logs/example/cvs/ktails_models/"
+    # ks = [10]
+    # log_based_experiments(LOG_PATH, ks, GRAPH_OUTPUT, MODEL_NAME)
+    # experiment_1()
+    # experiment_2()
