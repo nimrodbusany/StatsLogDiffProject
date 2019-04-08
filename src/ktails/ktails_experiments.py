@@ -165,6 +165,13 @@ def minimize_nfa(G, path = ""):
     ## to check, user third party module
     labels = set([x for x in nx.get_edge_attributes(G, 'label').values()])
     k = KanellakisAndSmolka(labels)
+
+    ## sainity check, in k-tail bisimluation does not change the model
+    # blocks = k.compute_coarsest_partition(G)
+    # non_singelton_blocks = [b for b in blocks if len(b) > 1]
+    # if len(non_singelton_blocks):
+    #     raise ValueError('bisumlation changed k-tails models', blocks)
+
     g1_r = G.reverse()
     blocks = k.compute_coarsest_partition(g1_r)
     g_abs = coarsen_graph(G, blocks)
@@ -190,18 +197,18 @@ def experiment_2():
     # OUTPUT_DIR = '../../data/logs/example/mktails/'
 
     # LOGS SET 2
-    # BASE_DIR = "../../data/bear/"
-    # LOG_PATH = BASE_DIR + 'desktop.log'
-    # traces = SimpleLogParser.read_log(LOG_PATH)
-    # OUTPUT_DIR = '../../data/logs/example/mktails/bear/'
+    BASE_DIR = "../../data/bear/"
+    LOG_PATH = BASE_DIR + 'desktop.log'
+    traces = SimpleLogParser.read_log(LOG_PATH)
+    OUTPUT_DIR = '../../data/logs/example/mktails/bear/'
 
     # LOGS SET 3
     # model_path = "C:/Users/USER/PycharmProjects/StatsLogDiffProject/models/stamina/cvs.net.dot"
     # model = ProtocolModel(model_path, id=0)
     # log = LogGenerator.produce_log_from_model(model.graph, traces2produce=1000)
     # LogWriter.write_log(log, "csv.log")
-    traces = SimpleLogParser.read_log('../../data/logs/example/mktails/csv/csv.log')
-    OUTPUT_DIR = '../../data/logs/example/mktails/csv/'
+    # traces = SimpleLogParser.read_log('../../data/logs/example/mktails/csv/csv.log')
+    # OUTPUT_DIR = '../../data/logs/example/mktails/csv/'
 
     ks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
     for k in ks:
@@ -211,15 +218,11 @@ def experiment_2():
         print('original graph nodes/edges:', len(G.nodes()), len(G.edges))
         for n in G.nodes(data=True):
             n[1].pop('label')
-        minimize_nfa(G, OUTPUT_DIR)
-        print('minimized graph nodes/edges:', len(G.nodes()), len(G.edges))
+        G_min = minimize_nfa(G, OUTPUT_DIR)
+        print('minimized graph nodes/edges:', len(G_min.nodes()), len(G_min.edges))
         print('running with past minimization')
         # simple_runner(traces, k, OUTPUT_DIR, "mktails_past", True)
         print('-----------------------')
-        exit()
-
-def experiment3():
-    pass
 
 if __name__ == '__main__':
     experiment_2()
