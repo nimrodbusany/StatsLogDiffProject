@@ -154,7 +154,10 @@ def write2file(g, path):
     for n in g.nodes():
         remove_attribute(g, n, "contraction")
     for e in g.edges:
-        del g.get_edge_data(e[0], e[1])[TRACES_ATTR_NAME]
+        if type(g) in [nx.MultiDiGraph, nx.MultiGraph]:
+            del g.get_edge_data(e[0], e[1], e[2])[TRACES_ATTR_NAME]
+        else:
+            del g.get_edge_data(e[0], e[1])[TRACES_ATTR_NAME]
     nx.drawing.nx_pydot.write_dot(g, path)
 
 

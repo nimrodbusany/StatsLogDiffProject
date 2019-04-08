@@ -30,7 +30,7 @@ class LogsManager:
     def reset(self):
         self.current_group_id = 0
 
-class RealWorldLogsManager(LogsManager): ## TODO: simliar to the models manager, consider adding support of multiple log groups
+class RealWorldLogsManager(LogsManager): ## TODO: simliar to the ktails_models manager, consider adding support of multiple log groups
 
     def __init__(self, logs_json_path, write_logs=False):
 
@@ -92,7 +92,7 @@ class ModelBasedLogsManager(LogsManager):
         :param write_logs:
         '''
         super(ModelBasedLogsManager, self).__init__(write_logs)
-        self.models = json.load(open(models_json_path))["models"]
+        self.models = json.load(open(models_json_path))["ktails_models"]
 
     def get_next_logs_batch(self, k, logs2fetch=2, traces2produce=100, batch_id=""):
 
