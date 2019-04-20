@@ -57,98 +57,350 @@ class kTailsRunner:
 
         return self.ftr2ftrs, self.states2transitions2traces
 
+
     def apply_past_equivelance(self):
 
-        ## helper function: maps each state to its incoming transitions
-        def flip_future_dict(ftr2equiv_classes):
-            incoming_transitions_dict = {}
-            for ftr_state in self.ftr2ftrs:
-                for next_state in self.ftr2ftrs[ftr_state]:
-                    incoming_transitions_dict.setdefault(ftr2equiv_classes[next_state], set()).add(
-                        (ftr2equiv_classes[ftr_state], ftr_state[0]))
-            return incoming_transitions_dict
 
-        ## helper function: maps each state to its incoming transitions
-        def flip_future_dict(ftr2equiv_classes):
-            incoming_transitions_dict = {}
-            for ftr_state in self.ftr2ftrs:
-                for next_state in self.ftr2ftrs[ftr_state]:
-                    incoming_transitions_dict.setdefault(ftr2equiv_classes[next_state], set()).add(
-                        (ftr2equiv_classes[ftr_state], ftr_state[0]))
-            return incoming_transitions_dict
+        ftr2equiv_classes = self.ftr2equiv_classes.copy()
+        incoming_transitions_dict = {}  ## maps each state to its incoming transitions
+        outoing_transitions_dict = {}  ## maps each state to its outgoing transitions
+        state2id = {}  ## Q -> Equiv_id maps each state to id of equivelance class
 
-        ## helper function: computes the past of a block
-        def compute_block_past(concrete_states, incoming_transitions_dict):
-            state_incoming_transitions = set()
-            for concrete_state in concrete_states:
-                incoming_transitions = frozenset(
-                    (states2blocks[q], a) for (q, a) in incoming_transitions_dict.get(concrete_state, []))
-                state_incoming_transitions = state_incoming_transitions.union(incoming_transitions)
-            return frozenset(state_incoming_transitions)
+        for ftr_state in self.ftr2ftrs:  ## iterator over the future transitions maps,
+            for next_state in self.ftr2ftrs[ftr_state]:
+                incoming_transitions_dict.setdefault(ftr2equiv_classes[next_state], set()).add(
+                    (ftr2equiv_classes[ftr_state], ftr_state[0]))
+                state2id[ftr2equiv_classes[ftr_state]] = ftr2equiv_classes[ftr_state]
+                state2id[ftr2equiv_classes[next_state]] = ftr2equiv_classes[next_state]
 
-        ftr2equiv_id = self.ftr2equiv_classes.copy()
-        ## input: ftr2ftr, ftr2equiv_id
-        # create auxiliary dictionaries, used for fast extraction
-        equiv_classes2ftr = {ftr2equiv_id[ftr]: ftr for ftr in ftr2equiv_id} ## maps each equivalence state id to its future
-        block_count = 0
-
-        #  STEP 1: map each state to a single state block
-        blocks2states = {} ## id -> equiv states,  maps id to a block of states
-        states2blocks = {} ## Q -> maps each state to block id
-        for ftr_id in equiv_classes2ftr.keys(): ## initially place every state on its own block
-            block_id = 'b' + str(block_count)
-            blocks2states[block_id] = set([ftr_id])
-            states2blocks[ftr_id] = block_id
-            block_count += 1
-
-        incoming_transitions_dict = flip_future_dict(ftr2equiv_id)  ## maps each state to its incoming transitions
-        states_queue = set(blocks2states.keys()) ## all states must be examined
+        max_id = max(state2id) + 1  ## new equivalence classes will recieve a higher id
+        states_queue = set(state2id.keys())  ## all states must be examined
+        states_queue.remove(0)  ## HACK: remove dummy initial node with not past, find nicer solution
         ## variables collected for stats
         if VERBOSE: minimization_iterations, new_states, states_reads, states_seen_coutners = 0, 0, 0, {}
 
-        while True: ## loop until the blocks do not change
+        while states_queue:  ## while there are states to examine
 
             if VERBOSE: states_reads += len(states_queue)
             if VERBOSE: minimization_iterations += 1
 
-            past_equiv_classes = {} ## compute a dictionary of past equivalence classes of blocks: map pasts (set of block transitions) -> blocks (that share the past)
-            for block in blocks2states: ## update blocks past_dict
-                state_incoming_transitions = compute_block_past(blocks2states[block], incoming_transitions_dict)
-                incoming_transitions_dict[block] = state_incoming_transitions
-                past_equiv_classes.setdefault(state_incoming_transitions, set()).add(block)
-                if VERBOSE: states_seen_coutners[block] = states_seen_coutners.get(block, 0) + 1
+            past_equiv_classes = {}
+            for state in states_queue:  ## update past_dict
+                state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in incoming_transitions_dict.get(state, set()))
+                past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
+                if VERBOSE: states_seen_coutners[state] = states_seen_coutners.get(state, 0) + 1
 
-            prev_block_count = block_count
-            for block_union in past_equiv_classes.values():
-                if len(block_union) > 1:
-                    block_count += 1
-                    block_id = 'b' + str(block_count)
-                    equiv_states = blocks2states.setdefault(block_id, set())
-                    for block in block_union:
-                        for concrete_state in blocks2states[block]:
-                            equiv_states.add(concrete_state)
-                            states2blocks[concrete_state] = block_id
-                        blocks2states.pop(block)
+            states_queue = set()
+            prev_max = max_id
+            for equiv_class in past_equiv_classes.values():
+                equiv_id = max_id
+                if len(set([state2id[st] for st in equiv_class])) > 1:
+                    for equiv_state in equiv_class:
+                        state2id[equiv_state] = equiv_id
+                    max_id += 1
                     if VERBOSE: new_states += 1
 
-            if prev_block_count == block_count:
+            states_queue = set(state2id.keys())
+            if prev_max == max_id:
                 break
 
-        for block in blocks2states:
-            for concrete_state in blocks2states[block]:
-                ftr = equiv_classes2ftr[concrete_state]
-                ftr2equiv_id[ftr] = block
+        for state in ftr2equiv_classes:
+            self.ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
 
-        total_equiv_classes_after_reduction = len(set(ftr2equiv_id.values()))
         if VERBOSE:
-            print('total iterations, states_reads, new_states, total equiv states, max state visits:', minimization_iterations,
+            total_equiv_classes_after_reduction = len(set(ftr2equiv_classes.values()))
+            print('total iterations, states_reads, new_states, total equiv states, max state visits:',
+                  minimization_iterations,
                   states_reads, new_states, total_equiv_classes_after_reduction, max(states_seen_coutners.values()))
 
-        if total_equiv_classes_after_reduction - len(set(self.ftr2equiv_classes.values())) > 0:
-            raise Exception("Past minimization increased number of equivalence classes. This must be a bug!!!! "
-                            + str(len(set(ftr2equiv_id.values()))) + " - " + str(len(set(self.ftr2equiv_classes.values()))))
 
-        self.ftr2equiv_classes = ftr2equiv_id
+
+    # def apply_past_equivelance_optimized(self):
+    #
+    #
+    #     ftr2equiv_classes = self.ftr2equiv_classes.copy()
+    #     incoming_transitions_dict = {}  ## maps each state to its incoming transitions
+    #     outoing_transitions_dict = {}  ## maps each state to its outgoing transitions
+    #     state2id = {}  ## Q -> Equiv_id maps each state to id of equivelance class
+    #
+    #     for ftr_state in self.ftr2ftrs:  ## iterator over the future transitions maps,
+    #         for next_state in self.ftr2ftrs[ftr_state]:
+    #             incoming_transitions_dict.setdefault(ftr2equiv_classes[next_state], set()).add(
+    #                 (ftr2equiv_classes[ftr_state], ftr_state[0]))
+    #             outoing_transitions_dict.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+    #                 (ftr2equiv_classes[next_state], ftr_state[0]))
+    #             state2id[ftr2equiv_classes[ftr_state]] = ftr2equiv_classes[ftr_state]
+    #             state2id[ftr2equiv_classes[next_state]] = ftr2equiv_classes[next_state]
+    #
+    #     max_id = max(state2id) + 1  ## new equivalence classes will recieve a higher id
+    #     states_queue = set(state2id.keys())  ## all states must be examined
+    #     states_queue.remove(0)  ## HACK: remove dummy initial node with not past, find nicer solution
+    #     K_BLOCK_MINIMIZATION = False
+    #     ## variables collected for stats
+    #     if VERBOSE: minimization_iterations, new_states, states_reads, states_seen_coutners = 0, 0, 0, {}
+    #
+    #     while states_queue:  ## while there are states to examine
+    #
+    #         if VERBOSE: states_reads += len(states_queue)
+    #         if VERBOSE: minimization_iterations += 1
+    #
+    #         past_equiv_classes = {}
+    #         for state in states_queue:  ## update past_dict
+    #             state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in incoming_transitions_dict.get(state, set()))
+    #             past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
+    #             if VERBOSE: states_seen_coutners[state] = states_seen_coutners.get(state, 0) + 1
+    #
+    #         states_queue = set()
+    #         prev_max = max_id
+    #         for equiv_class in past_equiv_classes.values():
+    #             equiv_id = max_id
+    #             if len(set([state2id[st] for st in equiv_class])) > 1:
+    #                 for equiv_state in equiv_class:
+    #                     state2id[equiv_state] = equiv_id
+    #                     if K_BLOCK_MINIMIZATION: states_queue.update(
+    #                         [tup[0] for tup in outoing_transitions_dict[equiv_state]])
+    #                 max_id += 1
+    #                 if VERBOSE: new_states += 1
+    #
+    #         if not K_BLOCK_MINIMIZATION:  ## if no states were merged
+    #             states_queue = set(state2id.keys())
+    #             if prev_max == max_id:
+    #                 break
+    #
+    #     for state in ftr2equiv_classes:
+    #         ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
+    #
+    #     total_equiv_classes_after_reduction = len(set(ftr2equiv_classes.values()))
+    #     if VERBOSE:
+    #         print('total iterations, states_reads, new_states, total equiv states, max state visits:',
+    #               minimization_iterations,
+    #               states_reads, new_states, total_equiv_classes_after_reduction, max(states_seen_coutners.values()))
+    #
+    #     if total_equiv_classes_after_reduction - len(set(self.ftr2equiv_classes.values())) > 0:
+    #         raise Exception("Past minimization increased number of equivalence classes. This must be a bug!!!! "
+    #                         + str(len(set(ftr2equiv_classes.values()))) + " - " + str(
+    #             len(set(self.ftr2equiv_classes.values()))))
+    #
+    #     self.ftr2equiv_classes = ftr2equiv_classes
+
+    # def apply_past_equivelance_v2(self):
+    #
+    #     ## helper function: maps each state to its incoming transitions
+    #     # def flip_future_dict(ftr2equiv_classes):
+    #     #     incoming_transitions_dict = {}
+    #     #     for ftr_state in self.ftr2ftrs:
+    #     #         for next_state in self.ftr2ftrs[ftr_state]:
+    #     #             incoming_transitions_dict.setdefault(ftr2equiv_classes[next_state], set()).add(
+    #     #                 (ftr2equiv_classes[ftr_state], ftr_state[0]))
+    #     #     return incoming_transitions_dict
+    #
+    #     ## helper function: computes the past of a block
+    #     # def compute_block_past(concrete_states, incoming_transitions_dict):
+    #     #     state_incoming_transitions = set()
+    #     #     for concrete_state in concrete_states:
+    #     #         incoming_transitions = frozenset(
+    #     #             (states2blocks[q], a) for (q, a) in incoming_transitions_dict.get(concrete_state, []))
+    #     #         state_incoming_transitions = state_incoming_transitions.union(incoming_transitions)
+    #     #     return frozenset(state_incoming_transitions)
+    #
+    #     ftr2equiv_id = self.ftr2equiv_classes.copy()
+    #     ## input: ftr2ftr, ftr2equiv_id
+    #     # create auxiliary dictionaries, used for fast extraction
+    #     equiv_classes2ftr = {ftr2equiv_id[ftr]: ftr for ftr in ftr2equiv_id} ## maps each equivalence state id to its future
+    #     block_count = 0
+    #
+    #     #  STEP 1: map each state to a single state block
+    #     blocks2states = {} ## id -> equiv states,  maps id to a block of states
+    #     states2blocks = {} ## Q -> maps each state to block id
+    #     for ftr_id in equiv_classes2ftr.keys(): ## initially place every state on its own block
+    #         block_id = 'b' + str(block_count)
+    #         blocks2states[block_id] = set([ftr_id])
+    #         states2blocks[ftr_id] = block_id
+    #         block_count += 1
+    #
+    #     blocks_incoming_transitions_dict = {}
+    #     blocks_outgoing_transitions_dict = {}
+    #
+    #     for state in states2blocks:
+    #         cur_block_id = states2blocks[state]
+    #         ftr_state = equiv_classes2ftr[state]
+    #         for next_state_ftr in self.ftr2ftrs.get(ftr_state, tuple()):
+    #             next_state_ftr_id = ftr2equiv_id[next_state_ftr]
+    #             next_block = states2blocks[next_state_ftr_id]
+    #             blocks_incoming_transitions_dict.setdefault(next_block, set()).add(
+    #                 (cur_block_id, ftr_state[0]))
+    #             blocks_outgoing_transitions_dict.setdefault(cur_block_id, set()).add(
+    #                 (next_block, ftr_state[0]))
+    #
+    #     ## variables collected for stats
+    #     if VERBOSE: minimization_iterations, new_states, blocks_created, states_seen_coutners = 0, 0, 0, {}
+    #
+    #     past_equiv_classes = {}  ## compute a dictionary of past equivalence classes of blocks: map pasts (set of block transitions) -> blocks (that share the past)
+    #     for block in blocks2states:  ## update blocks past_dict
+    #         block_incoming_transitions = frozenset(blocks_incoming_transitions_dict.get(block, set()))
+    #         past_equiv_classes.setdefault(block_incoming_transitions, set()).add(block)
+    #         if VERBOSE: states_seen_coutners[block] = states_seen_coutners.get(block, 0) + 1
+    #
+    #     blocks2unify = [(block_past, block_states) for block_past, block_states in past_equiv_classes.items() if len(block_states) > 1]
+    #
+    #     while len(blocks2unify) > 0: ## loop until the blocks do not change
+    #
+    #         if VERBOSE: blocks_created = block_count
+    #         if VERBOSE: minimization_iterations += 1
+    #         print('iteration', minimization_iterations)
+    #         blocks_past, block_states = blocks2unify.pop(0) ## remove first group of blocks
+    #         block_states = block_states.copy()
+    #         if len(block_states) == 0:
+    #             continue
+    #
+    #         ## init new block
+    #         block_count += 1
+    #         union_block_id = 'b' + str(block_count)
+    #         union_blocks_states = set()
+    #         union_block_outgoing_transitions = blocks_outgoing_transitions_dict.setdefault(union_block_id, set())
+    #         union_block_incoming_transitions = blocks_incoming_transitions_dict.setdefault(union_block_id, set())
+    #         blocks2states[union_block_id] = union_blocks_states
+    #
+    #         for block in block_states: ## remove each of the unified blocks, and update past_equiv_dict
+    #
+    #             # past_equiv_classes[frozenset(union_block_incoming_transitions)].remove(block)
+    #             try:
+    #                 for concrete_state in blocks2states.pop(block): ## add block state to the union block
+    #                     union_blocks_states.add(concrete_state)
+    #             except KeyError:
+    #                 print(block, blocks_past)
+    #                 print('imashaa')
+    #             block_incoming_transitions = blocks_incoming_transitions_dict.pop(block)
+    #             block_outgoing_transitions = blocks_outgoing_transitions_dict.pop(block) ## remove block from outgoing transition dict
+    #
+    #             for incoming_transition in block_incoming_transitions: union_block_incoming_transitions.add(incoming_transition) ## TODO: can be removed - double check
+    #             for outgoing_transition in block_outgoing_transitions: union_block_outgoing_transitions.add(outgoing_transition) ## add outgoing_transition to outgoing transition dict[union_state]
+    #
+    #             for outgoing_transition in block_outgoing_transitions:
+    #
+    #                 target_block = outgoing_transition[0]
+    #                 target_block_incoming_transitions = blocks_incoming_transitions_dict.get(target_block, set()) ## TODO: skipping block in loop? should reprocess like the rest?
+    #
+    #                 if len(target_block_incoming_transitions) == 0:
+    #                     continue
+    #
+    #                 for incomoing_transition in target_block_incoming_transitions:
+    #                     if incomoing_transition[0] == block:
+    #                         transition2update = incomoing_transition
+    #                         break
+    #
+    #                 past_blocks = past_equiv_classes.get(frozenset(target_block_incoming_transitions))
+    #
+    #                 if past_blocks:
+    #                     if len(past_blocks) == 1:
+    #                         past_equiv_classes.pop(frozenset(target_block_incoming_transitions))
+    #                     else:
+    #                         if target_block in past_blocks:
+    #                             past_blocks.remove(target_block)
+    #                 target_block_incoming_transitions.remove(transition2update)
+    #                 target_block_incoming_transitions.add((union_block_id, transition2update[1]))
+    #                 updated_past_ = frozenset(target_block_incoming_transitions)
+    #                 past_states = past_equiv_classes.setdefault(updated_past_, set())  ## TODO: remove set if empty!
+    #                 past_states.add(target_block)
+    #                 # if len(past_states) == 2: ## if > 2, was added by someone else!
+    #                 #     blocks2unify.append((updated_past_, past_states))
+    #
+    #             for prev_transition in block_incoming_transitions:
+    #                 prev_block = prev_transition[0]
+    #                 transition2update = None
+    #                 prev_block_outgoing_transitions = blocks_outgoing_transitions_dict.get(prev_block, set())
+    #                 if len(prev_block_outgoing_transitions) == 0: ## TODO: skipping block in loop? should reprocess like the rest?
+    #                     continue
+    #
+    #                 for transition in prev_block_outgoing_transitions:
+    #                     if transition[0] == block:
+    #                         transition2update = transition
+    #                         break
+    #                 blocks_outgoing_transitions_dict[prev_block].remove(transition2update)
+    #                 blocks_outgoing_transitions_dict[prev_block].add((union_block_id, transition2update[1]))
+    #
+    #             if VERBOSE: new_states += 1
+    #             # if block in past_equiv_classes[frozenset(blocks_past)]:
+    #             #     past_equiv_classes[frozenset(blocks_past)].remove(block)
+    #             # else:
+    #             #     print(block, blocks_past)
+    #
+    #         past_equiv_classes[frozenset(blocks_past)] = set([union_block_id])
+    #         blocks2unify = [(block_past, block_states) for block_past, block_states in past_equiv_classes.items() if
+    #                         len(block_states) > 1]
+    #
+    #     for block in blocks2states:
+    #         for concrete_state in blocks2states[block]:
+    #             ftr = equiv_classes2ftr[concrete_state]
+    #             ftr2equiv_id[ftr] = block
+    #
+    #     total_equiv_classes_after_reduction = len(set(ftr2equiv_id.values()))
+    #     states_reads = 1
+    #     if VERBOSE:
+    #         print('total iterations, states_reads, new_states, total equiv states, max state visits:', minimization_iterations,
+    #               states_reads, new_states, total_equiv_classes_after_reduction, max(states_seen_coutners.values()))
+    #
+    #     if total_equiv_classes_after_reduction - len(set(self.ftr2equiv_classes.values())) > 0:
+    #         raise Exception("Past minimization increased number of equivalence classes. This must be a bug!!!! "
+    #                         + str(len(set(ftr2equiv_id.values()))) + " - " + str(len(set(self.ftr2equiv_classes.values()))))
+    #
+    #     self.ftr2equiv_classes = ftr2equiv_id
+
+
+    # def apply_past_equivelance_v1(self, ftr2equiv_classes):
+    #
+    #     state_backard_transitions = {}
+    #     state_forward_transitions = {}
+    #     state2id = {}
+    #     total_states, total_transitions = len(self.ftr2ftrs), 0
+    #     starting_states = set()
+    #     for ftr_state in self.ftr2ftrs:
+    #         if ftr_state[0] == 'init':
+    #             starting_states.add(ftr_state)
+    #         for next_state in self.ftr2ftrs[ftr_state]:
+    #             state_backard_transitions.setdefault(ftr2equiv_classes[next_state], set()).add(
+    #                 (ftr2equiv_classes[ftr_state], ftr_state[0]))
+    #             state_forward_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+    #                 (ftr2equiv_classes[next_state], ftr_state[0]))
+    #             state2id[ftr2equiv_classes[ftr_state]] = ftr2equiv_classes[ftr_state]
+    #             state2id[ftr2equiv_classes[next_state]] = ftr2equiv_classes[next_state]
+    #             total_transitions += 1
+    #     for ftr_state in starting_states:
+    #         state_backard_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+    #             (0, ftr_state[0]))
+    #         state_forward_transitions.setdefault(0, set()).add(
+    #             (ftr2equiv_classes[ftr_state], ftr_state[0]))
+    #     max_id = max(state2id) + 1
+    #     states_queue = set(state2id.keys())
+    #     states_queue.remove(0)  ## HACK: remove dummy initial node with not past, find nicer solution
+    #     minimization_iterations, total_equiv_states_across_rounds = 0, 0
+    #     states_reads = 0
+    #     states_seend_coutners = {}
+    #     while states_queue:
+    #         states_reads += len(states_queue)
+    #         minimization_iterations += 1
+    #         past_equiv_classes = {}
+    #         for state in states_queue:
+    #             states_seend_coutners[state] = states_seend_coutners.get(state, 0) + 1
+    #             state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in state_backard_transitions[state])
+    #             past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
+    #         states_queue = set()
+    #         for equiv_class in past_equiv_classes.values():
+    #             equiv_id = max_id
+    #             if len(equiv_class) > 1 and len(set([state2id[st] for st in equiv_class])) > 1:
+    #                 total_equiv_states_across_rounds += 1
+    #                 for equiv_state in equiv_class:
+    #                     state2id[equiv_state] = equiv_id
+    #                     states_queue.update([tup[0] for tup in state_forward_transitions[equiv_state]])
+    #                 max_id = max_id + 1
+    #
+    #     for state in ftr2equiv_classes:
+    #         ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
+    #     print('total states, transitions:', total_states, total_transitions)
+    #     print('total iterations, states_reads, total equiv states:', minimization_iterations, states_reads,
+    #           total_equiv_states_across_rounds, max_id)
+    #     print('max state visits', max(
+    #         states_seend_coutners.values()))  ## , [states_seend_coutners[st] for st in states_seend_coutners if states_seend_coutners[st] > 1]
 
     def construct_graph_from_futures(self, use_traces_as_set = False, past_minimization= False):
 
@@ -162,7 +414,6 @@ class kTailsRunner:
         self.ftr2equiv_classes = dict(map(lambda x: (x[1], x[0]), enumerate(self.ftr2ftrs)))
         self.ftr2equiv_classes[tuple()] = len(self.ftr2equiv_classes)
 
-        ## unify equiv class that share an id
         if past_minimization:
             self.apply_past_equivelance()
 
