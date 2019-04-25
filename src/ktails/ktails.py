@@ -127,10 +127,10 @@ class kTailsRunner:
                 tar_src = (self.ftr2equiv_classes[ftr], self.ftr2equiv_classes[ftr2])
                 self.ftr2transitions[(ftr, ftr2)] = tar_src
                 edge_data = edges_dic.get(tar_src)
-                edge_label = tuple([ftr[0] if ftr else ""])
+                edge_label = ftr[0] if ftr else ""
                 edge_traces = self.states2transitions2traces[ftr][ftr2]
                 if edge_data is None:
-                    label2traces = {edge_label[0]: edge_traces.copy()}
+                    label2traces = {edge_label: edge_traces.copy()}
                     # w = len(label2traces) if not use_traces_as_set else len(set(label2traces))
                     label_transitions_traces = []
                     for l in label2traces:
@@ -223,7 +223,7 @@ class kTailsRunner:
             for transition in self.state2transitions2prob[state]:
                 src = self.ftr2equiv_classes[state]
                 trg = self.ftr2equiv_classes[transition]
-                labels[(src, trg)] = str(labels[(src, trg)]) + " p="+ str(round(self.state2transitions2prob[state][transition], 2))
+                labels[(src, trg)] = str(labels[(src, trg)]) + " pr: "+ str(round(self.state2transitions2prob[state][transition], 2)) + "; vs: "+ str(len(self.states2transitions2traces[state][transition]))
                 edge_penwidth[(src, trg)] = 1 + 2 * round(self.state2transitions2prob[state][transition], 2)
 
         nx.set_edge_attributes(self.g, labels, 'label')
@@ -241,8 +241,12 @@ class kTailsRunner:
         diff_edge = self.ftr2transitions[(source, target)]
         pairwise_comparison = difference[PAIRWISE_COMPARISON_ATTR_NAME]
         test_info = next(iter(pairwise_comparison.values()))
-        edge_labels[diff_edge] = source[0] + " p1, p2:" + str(round(test_info[P1_ATTR_NAME], 2)) + ", " \
-        + str(round(test_info[P2_ATTR_NAME], 2)) + '\\npvalue' + str(round(difference[PVALUE_ATTR_NAME], 2))
+        edge_labels[diff_edge] = source[0] + " pr1/pr2:" + str(round(test_info[P1_ATTR_NAME], 2)) + ";" \
+        + str(round(test_info[P2_ATTR_NAME], 2)) \
+        +  "; vs1/vs2:" + str(test_info[M1_ATTR_NAME]) + ";" + str(test_info[M2_ATTR_NAME]) \
+        + '\\npvalue' + str(round(difference[PVALUE_ATTR_NAME], 2))
+
+
 
 
         ## mark trace transitions
@@ -258,7 +262,7 @@ class kTailsRunner:
 
 
     def write2file(self, path):
-        from diff_graph_overlay import write2file
+        from src.graphs.diff_graph_overlay import write2file
         write2file(self.g, path)
 
 

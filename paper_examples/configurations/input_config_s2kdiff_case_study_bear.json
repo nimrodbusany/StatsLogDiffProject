@@ -1,14 +1,18 @@
 {
     "logs": [
         {
-            "id": "first_half_traces",
-            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/desktop.log"
+            "id": "l1",
+            "path": "../../data/bear/desktop.log"
         },
         {
-            "id": "last_half_traces",
-            "path": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/data/logs/case_study/bear/mobile.log"
+            "id": "l2",
+            "path": "../../data/bear/mobile.log"
+        },
+        {
+            "id": "l3",
+            "path": "../../data/bear/mobile.log"
         }
     ],
-    "output_dir": "C:/Users/USER/PycharmProjects/StatsLogDiffProject/results/case_study/bear/desktop/"
+    "output_dir": "../../results/"
 }
 

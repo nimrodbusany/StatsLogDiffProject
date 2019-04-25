@@ -1,5 +1,8 @@
 #!/usr/bin/python
+import sys
 import getopt, json, sys, os
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path + '/../../')
 import pandas as pd
 
 from src.logs_parsers.simple_log_parser import SimpleLogParser
@@ -45,10 +48,10 @@ def process_input_files(argv):
         elif opt in ("-r", "--r_param"):
             try:
                 alg2run = int(arg)
-                if alg2run not in [1, 2]:
-                    raise ValueError('wrong -alg_to_run parameter choose 1 for s2kdiff; and 2 for snkdiff')
+                if alg2run not in [1, 2, 3]:
+                    raise ValueError('wrong -alg_to_run parameter choose 1 for s2kdiff; 2 for snkdiff; 3 for k_tails')
             except:
-                raise ValueError('wrong -alg_to_run parameter choose 1 for s2kdiff; and 2 for snkdiff')
+                raise ValueError('wrong -alg_to_run parameter choose 1 for s2kdiff; and 2 for snkdiff; 3 for k_tails')
 
     with open(inputfile) as f:
         data = json.load(f)
@@ -86,6 +89,10 @@ def run(log_paths, output_dir, alpha, delta, k, alg2run):
         logs_dict[log] = SimpleLogParser.read_log(log_paths[log]) #TODO: remove this [:1000]
         print(log , len(logs_dict[log]), sum([1 for tr in logs_dict[log] for ev in tr]))
 
+    if alg2run == 3:
+        run_kTails(list(log_paths.values())[0], output_dir, k)
+        return
+
     if len(logs_dict) < 2:
         raise ValueError("Please include at least two logs")
 
@@ -105,16 +112,29 @@ def run(log_paths, output_dir, alpha, delta, k, alg2run):
             sig_diffs.append(item)
         df = df.append(item, ignore_index=True)
 
-    ### OVERLAY DIFFS
+
+    ### Prepare all diffs file
+    df[df.mutiple_proportion_test_significant == True]
     df = df.sort_values(by=STATISTICS_ATTR_NAME, ascending=False)
-    df.to_csv(output_dir + 'results' + "_" + vals + '_diffs' + '.csv', index=False)
+    df.to_csv(output_dir + 'results.csv', index=False)
+
+    ### Prepare significant diffs file
+    df = df[df[MUTIPLE_PROPORTION_TEST_SIGNIFICANT_ATTR_NAME] == True]
+    df[PAIRWISE_COMPARISON_ATTR_NAME] = df[PAIRWISE_COMPARISON_ATTR_NAME].apply(
+        func=lambda x: dict([diff for diff in x.items() if diff[1]['pvalue'] < alpha]))
+    df[MAX_DIFF_ATTR_NAME] = df[PAIRWISE_COMPARISON_ATTR_NAME].apply(
+        func=lambda x: max([diff['diff'] for diff in x.values()], default=0))
+
+    df = df.sort_values(by=MAX_DIFF_ATTR_NAME, ascending=False)
+    df = df[[MAX_DIFF_ATTR_NAME, SOURCE_ATTR_NAME, TARGET_ATTR_NAME, DIFFERENT_IDS_ATTR_NAME, PVALUE_ATTR_NAME, PAIRWISE_COMPARISON_ATTR_NAME]]
+    df.to_csv(output_dir + 'significant_results.csv', index=False)
+
+    ### Overlay significant diffs
     if len(sig_diffs) == 0:
         print('No differences found')
-    else:
-        if alg2run == 1:
-            s2kdiff_overlay(alg, k, logs_dict, output_dir, sig_diffs)
-        else:
-            snkdiff_overlay(delta, k, logs_dict, output_dir, sig_diffs)
+        return
+    if alg2run == 1: s2kdiff_overlay(alg, k, logs_dict, output_dir, sig_diffs)
+    if alg2run == 2: snkdiff_overlay(delta, k, logs_dict, output_dir, sig_diffs)
 
 
 def find_most_interesting_diff_in_log(sig_diffs, first_log=True, by_pvalue=True):
@@ -140,6 +160,14 @@ def snkdiff_overlay(delta, k, logs_dict, output_dir, sig_diffs):
     g = overlay_differences_over_graph(g, sig_diffs, delta)
     write2file(g, output_dir + 'graph_nkdiff.dot')
 
+def run_kTails(log_file, output_dir, k):
+
+    log = SimpleLogParser.read_log(log_file)
+    ktails_runner = kTailsRunner(log, k)
+    ktails_runner.run_ktails(add_dummy_init=False, add_dummy_terminal=False)
+    ktails_runner.infer_transition_probabilities()
+    ktails_runner.overlay_transition_probabilities_over_graph()
+    ktails_runner.write2file(output_dir + 'graph_ktails.dot')
 
 def s2kdiff_overlay(alg, k, logs_dict, output_dir, sig_diffs):
     k_tail_models = {}
@@ -160,6 +188,12 @@ def s2kdiff_overlay(alg, k, logs_dict, output_dir, sig_diffs):
         model.overlay_trace_over_graph(sig_diffs[diff_ind],
                                        diffs2covering_traces[diff_ind])  ## TODO: missing pvalue, bolden diff
         model.write2file(output_dir + 'graph_2kdiff_' + log + '.dot')
+        covering_trace = logs_dict[log][diffs2covering_traces[diff_ind]]
+        try:
+            with open(output_dir + 'graph_2kdiff_' + log + '_covering_trace.txt', 'w') as fw:
+                fw.write("\n".join(covering_trace))
+        except:
+            raise IOError('cannot write covering file')
 
 
 def main(argv):

@@ -80,10 +80,13 @@ def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, colo
         colors[(src_id, trg_id)] = 'red'
         if 'different_ids' in diff: ## handle n2KDiff results
             groups, means = split2groups(diff, delta)
-            means_str = ", ".join([str(round(mean, 2)) for mean in means])
-            grps_str = [str(sorted(gr)) for gr in groups]
-            stats[(src_id, trg_id)] = str(
-                grps_str) + ": " + means_str
+            means_str = [round(mean, 2) for mean in means]
+            grps_str = [sorted(gr) for gr in groups]
+            groups2frq = sorted(zip(grps_str, means_str), key=lambda x: x[1])
+            grps2mean_str_rep = ""
+            for pair in groups2frq:
+                grps2mean_str_rep += "[" + ",".join(pair[0]) + "]: " + str(pair[1]) + "; "
+            stats[(src_id, trg_id)] = grps2mean_str_rep
             # stats[(src_id, trg_id)] = str(round(float(diff[PVALUE_ATTR_NAME]), 2)) + ": " +  str(grps_str) + " " + means_str
             # import math
             # most_sig_diff = sorted(diff['pairwise_comparisons'].items(), key=lambda test: 1 if math.isnan(test[1]['pvalue']) else test[1]['pvalue'])[0]
@@ -113,7 +116,7 @@ def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, colo
         if e in stats:
             if add_test_info:
                 # edge_labels[e] = str(edge_labels[e]) + "_" + str(stats[e])
-                edge_labels[e] = str(stats[e])
+                edge_labels[e] += ": " + str(stats[e])
             pen_widths[e] = \
                 1 + min(1.5 * (1-((statstics_val[e] - min_statistic) / (max_statistic - min_statistic))), 3)
         else:
@@ -145,7 +148,7 @@ def overlay_differences_over_graph(g, sig_diffs, delta, add_test_info=True, colo
     return g
 
 
-def write2file(g, path):
+def write2file(g, path, remove_node_label=True):
 
     def remove_attribute(G, tnode, attr):
         G.node[tnode].pop(attr, None)
@@ -153,6 +156,8 @@ def write2file(g, path):
     g = g.copy()
     for n in g.nodes():
         remove_attribute(g, n, "contraction")
+        if remove_node_label:
+            remove_attribute(g, n, "label")
     for e in g.edges:
         if type(g) in [nx.MultiDiGraph, nx.MultiGraph]:
             del g.get_edge_data(e[0], e[1], e[2])[TRACES_ATTR_NAME]
