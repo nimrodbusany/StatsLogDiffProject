@@ -114,12 +114,11 @@ def run(log_paths, output_dir, alpha, delta, k, alg2run):
 
 
     ### Prepare all diffs file
-    df[df.mutiple_proportion_test_significant == True]
     df = df.sort_values(by=STATISTICS_ATTR_NAME, ascending=False)
     df.to_csv(output_dir + 'results.csv', index=False)
 
     ### Prepare significant diffs file
-    df = df[df[MUTIPLE_PROPORTION_TEST_SIGNIFICANT_ATTR_NAME] == True]
+    df = df[df[COUNT_SIGNIFICANT_DIFFS_ATTR_NAME] > 0]
     df[PAIRWISE_COMPARISON_ATTR_NAME] = df[PAIRWISE_COMPARISON_ATTR_NAME].apply(
         func=lambda x: dict([diff for diff in x.items() if diff[1]['pvalue'] < alpha]))
     df[MAX_DIFF_ATTR_NAME] = df[PAIRWISE_COMPARISON_ATTR_NAME].apply(
