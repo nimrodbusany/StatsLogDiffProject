@@ -1,5 +1,5 @@
 from src.logs_parsers.bear_log_parser import BearLogParser
-from src.ktails.ktails_clean import kTailsRunner
+from src.ktails.mk_ktails import kTailsRunner
 from src.logs_parsers.simple_log_parser import SimpleLogParser
 from src.automaton.automaton import check_relation
 from PySimpleAutomata import DFA, NFA, automata_IO
@@ -148,9 +148,9 @@ def experiment_1():
         log_based_experiments(log_path, ks, output_path, model_name)
 
 
-def simple_runner(traces, k, output_dir, model_name, past_minimization=True, write_dot=False):
+def simple_runner(traces, ks, k2s, output_dir, model_name, past_minimization=True, write_dot=False):
 
-    ktail_runner_ = kTailsRunner(traces, k)
+    ktail_runner_ = kTailsRunner(traces, ks, k2s)
     ktail_runner_.run_ktails(add_dummy_init=True, add_dummy_terminal=True, past_minimization=past_minimization)
     g1 = ktail_runner_.get_graph()
     if write_dot:
@@ -195,6 +195,22 @@ def minimize_nfa(G, path = "", PaigeMethod=True, check_equiv=True):
 
     return g_abs
 
+
+def remove_attributes(graph):
+    for n1, d in graph.nodes(data=True):
+        for att in ['label']:
+            d.pop(att, None)
+    for n1, n2, d in graph.edges(data=True):
+        for att in ['traces', 'weight', 'key']:
+            d.pop(att, None)
+
+    for n1, n2, d in graph.edges(data=True):
+        d['label'] = "\"" + ",".join([st for st in d['label']]) + "\""
+
+            # str(d['label']).replace('(', '').replace(')', '') \
+            # .replace('[', '').replace(']', '').replace(',', ', ')
+
+
 def experiment_2(log_set):
 
     # LOGS SET 1
@@ -203,6 +219,11 @@ def experiment_2(log_set):
         LOG_PATH = BASE_DIR + 'mktails_log.log'
         traces = SimpleLogParser.read_log(LOG_PATH)
         OUTPUT_DIR = '../../data/logs/example/mktails/paper_example/'
+
+        ks = [1, 2]
+        k2s = {2: set(['lf'])}
+        # k2s = {}
+        ks_dict =[(ks, k2s)]
 
     # LOGS SET 2
     if log_set == 2:
@@ -219,14 +240,28 @@ def experiment_2(log_set):
         LogWriter.write_log(log, "../../data/logs/example/mktails/csv/csv.log")
         traces = SimpleLogParser.read_log('../../data/logs/example/mktails/csv/csv.log')
         OUTPUT_DIR = '../../data/logs/example/mktails/csv/'
+        ks = [3, 1]
+        k2s = {3: set(['login', 'appendfile'])}
+        ks_dict = [(ks, k2s)]
 
-    ks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    # LOGS SET 4
+    if log_set == 4:
+        BASE_DIR = '../../data/logs/example/mktails/left_inv/'
+        LOG_PATH = BASE_DIR + 'left_inv.log'
+        traces = SimpleLogParser.read_log(LOG_PATH)
+        OUTPUT_DIR = '../../data/logs/example/mktails/left_inv/'
+        ks = [2]
+        k2s = {2 : ['a', 'b', 'c', 'd', 'e']}
+        ks_dict = [(ks, k2s)]
+
+
+    # ks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
     # ks = [1]
-    for k in ks:
-        print('processing k -- ', k, '--')
+    for (ks, k2s) in ks_dict:
+        print('processing k -- ', ks, '--')
         print('running without past minimization')
         s_time_build = time()
-        G = simple_runner(traces, k, OUTPUT_DIR, "mktails", False)
+        G = simple_runner(traces, ks, k2s, OUTPUT_DIR, "mktails", False)
         time_build = (time() - s_time_build) / 60
         for n in G.nodes(data=True):
             n[1].pop('label')
@@ -241,7 +276,7 @@ def experiment_2(log_set):
         G_min2 = minimize_nfa(G.copy(), OUTPUT_DIR, PaigeMethod=False)
         time_kanella = ((time()-s_time2) / 60) + time_build
         s_time3 = time()
-        G_min3 = simple_runner(traces, k, OUTPUT_DIR, "mktails", True)
+        G_min3 = simple_runner(traces, ks, k2s, OUTPUT_DIR, "mktails", True)
         G_min1 = G_min2
         time_past_minimization = (time() - s_time3) / 60
         print('paige -      nodes, edges', len(G_min1.nodes()), len(G_min1.edges()))
@@ -252,26 +287,21 @@ def experiment_2(log_set):
         except:
             pass
         if True:
-            nx.drawing.nx_pydot.write_dot(G, OUTPUT_DIR + 'model_12.dot')
+            remove_attributes(G)
+            remove_attributes(G_min3)
+            nx.drawing.nx_pydot.write_dot(G, OUTPUT_DIR + 'model.dot')
             nx.drawing.nx_pydot.write_dot(G_min1, OUTPUT_DIR + 'model_minimized_paige.dot')
             nx.drawing.nx_pydot.write_dot(G_min2, OUTPUT_DIR + 'model_minimized_kanellakis.dot')
-            for n1, d in G_min3.nodes(data=True):
-                for att in ['label']:
-                    d.pop(att, None)
-            for n1, n2, d in G_min3.edges(data=True):
-                for att in ['traces', 'weight', 'key']:
-                    d.pop(att, None)
-            nx.drawing.nx_pydot.write_dot(G_min3, OUTPUT_DIR + 'model_minimized_past_12.dot')
-            nfa1 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_12.dot')
-            nfa2 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_paige.dot')
-            nfa3 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_past_12.dot')
-            nfa4 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_kanellakis.dot')
-            for min_nfa, name in [(nfa2, 'paige'), (nfa3, 'past'), (nfa4, 'kanellakis')]:
-                print(name, 'is equiv:', check_relation(nfa1, min_nfa) == 0)
-                if check_relation(nfa1, min_nfa) != 0:
-                    raise ValueError('not equiv!!!!!')
-        if k == 10:
-            exit()
+            nx.drawing.nx_pydot.write_dot(G_min3, OUTPUT_DIR + 'model_minimized_past.dot')
+            if False:
+                nfa1 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model.dot')
+                nfa2 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_paige.dot')
+                nfa3 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_past.dot')
+                nfa4 = automata_IO.nfa_dot_importer(OUTPUT_DIR + 'model_minimized_kanellakis.dot')
+                for min_nfa, name in [(nfa2, 'paige'), (nfa3, 'past'), (nfa4, 'kanellakis')]:
+                    print(name, 'is equiv:', check_relation(nfa1, min_nfa) == 0)
+                    if check_relation(nfa1, min_nfa) != 0:
+                        raise ValueError('not equiv!!!!!')
 
         # simple_runner(traces, k, OUTPUT_DIR, "mktails_past", True)
         print('-----------------------')
@@ -281,7 +311,7 @@ if __name__ == '__main__':
     import random, numpy as np
     random.seed(a=1234567)
     np.random.seed(seed=1234567)
-    experiment_2(log_set=3)
+    experiment_2(log_set=1)
     # bear_based_experiments()
     # MODEL_NAME = 'csv'
     # LOG_PATH = '../../data/logs/example/cvs/l0.log'

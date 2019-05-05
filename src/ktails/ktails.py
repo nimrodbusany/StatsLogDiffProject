@@ -1,8 +1,8 @@
 import networkx as nx
 from src.utils.project_constants import *
 
-INIT_LABEL = 'init'
-TERM_LABEL = 'term'
+INIT_LABEL = 'Initial'
+TERM_LABEL = 'Terminal'
 DOT_SUFFIX = ".dot"
 
 class KSequence: ## TODO incorporate to code; make object hashable
@@ -92,7 +92,7 @@ class kTailsRunner:
 
     def apply_past_equivelance_v1(self, ftr2equiv_classes, pasts_equiv):
 
-        state_backard_transitions = {}
+        state_backward_transitions = {}
         state_forward_transitions = {}
         state2id = {}
         total_states, total_transitions = len(self.ftr2ftrs), 0
@@ -101,7 +101,7 @@ class kTailsRunner:
             if ftr_state[0] == 'init':
                 starting_states.add(ftr_state)
             for next_state in self.ftr2ftrs[ftr_state]:
-                state_backard_transitions.setdefault(ftr2equiv_classes[next_state], set()).add(
+                state_backward_transitions.setdefault(ftr2equiv_classes[next_state], set()).add(
                     (ftr2equiv_classes[ftr_state], ftr_state[0]))
                 state_forward_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
                     (ftr2equiv_classes[next_state], ftr_state[0]))
@@ -109,7 +109,7 @@ class kTailsRunner:
                 state2id[ftr2equiv_classes[next_state]] = ftr2equiv_classes[next_state]
                 total_transitions += 1
         for ftr_state in starting_states:
-            state_backard_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
+            state_backward_transitions.setdefault(ftr2equiv_classes[ftr_state], set()).add(
                 (0, ftr_state[0]))
             state_forward_transitions.setdefault(0, set()).add(
                 (ftr2equiv_classes[ftr_state], ftr_state[0]))
@@ -118,14 +118,14 @@ class kTailsRunner:
         states_queue.remove(0) ## HACK: remove dummy initial node with not past, find nicer solution
         minimization_iterations, total_equiv_states_across_rounds = 0, 0
         states_reads = 0
-        states_seend_coutners = {}
+        states_seen_coutners = {}
         while states_queue:
             states_reads += len(states_queue)
             minimization_iterations += 1
             past_equiv_classes = {}
             for state in states_queue:
-                states_seend_coutners[state] = states_seend_coutners.get(state, 0) + 1
-                state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in state_backard_transitions[state])
+                states_seen_coutners[state] = states_seen_coutners.get(state, 0) + 1
+                state_incoming_transitions = frozenset((state2id[q], a) for (q, a) in state_backward_transitions[state])
                 past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
             states_queue = set()
             for equiv_class in past_equiv_classes.values():
@@ -141,7 +141,7 @@ class kTailsRunner:
             ftr2equiv_classes[state] = state2id[ftr2equiv_classes[state]]
         print('total states, transitions:', total_states, total_transitions)
         print('total iterations, states_reads, total equiv states:', minimization_iterations, states_reads, total_equiv_states_across_rounds, max_id)
-        print('max state visits', max(states_seend_coutners.values())) ## , [states_seend_coutners[st] for st in states_seend_coutners if states_seend_coutners[st] > 1]
+        print('max state visits', max(states_seen_coutners.values())) ## , [states_seend_coutners[st] for st in states_seend_coutners if states_seend_coutners[st] > 1]
 
     def apply_past_equivelance_v2(self, ftr2equiv_classes, pasts_equiv):
 
@@ -222,7 +222,6 @@ class kTailsRunner:
         edges_dic = {}
         for ftr in self.ftr2ftrs:
             for ftr2 in self.ftr2ftrs[ftr]:
-
                 tar_src = (self.ftr2equiv_classes[ftr], self.ftr2equiv_classes[ftr2])
                 edge_data = edges_dic.get(tar_src)
                 edge_label = tuple([ftr[0] if ftr else ""])
@@ -382,5 +381,6 @@ class kTailsRunner:
         for tr in self.log:
             new_log.append(list(tr))
         return new_log
+
 
 

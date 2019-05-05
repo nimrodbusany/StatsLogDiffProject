@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 
-G = nx.Graph()
+from src.graphs.example_graphs import *
 
 
 class KanellakisAndSmolka:
@@ -176,39 +176,45 @@ def example2():
     Q = nx.disjoint_union_all([S, T])
     k.compute_coarsest_partition(Q, plot=True)
 
-def get_k_struct():
-
-    ## EXAMPLE 3:
+def example4():
+    # EXAMPLE 2
+    # the following is the bisimulation example:
     S = nx.MultiDiGraph()
-    S.reverse()
-    S.add_edge(0, 1, label='i')
+    S.add_node(1)
+    S.add_node(2)
+    S.add_node(3)
+    S.add_node(4)
+    S.add_node(5)
+    S.add_node(6)
+    S.add_edge(1, 2, action=1, key=1)
+    S.add_edge(1, 3, action=1, key=2)
+    S.add_edge(2, 4, action=1, key=3)
+    S.add_edge(2, 6, action=1, key=4)
+    S.add_edge(3, 4, action=1, key=5)
+    S.add_edge(3, 5, action=1, key=6)
 
-    S.add_edge(1, 2, label='a')
-    S.add_edge(1, 3, label='a')
-    S.add_edge(1, 4, label='a')
+    labels = [1]
+    from PaigeAndTarjan import PaigeAndTarjan
+    k = PaigeAndTarjan(labels)
 
-    S.add_edge(2, 5, label='b')
-    S.add_edge(3, 6, label='b')
-    S.add_edge(4, 7, label='b')
+    plt.figure(1)
+    pos = nx.spring_layout(S)
+    nx.draw_networkx_nodes(S, pos, nodelist=S.nodes)
+    nx.draw_networkx_edges(S, pos)
+    plt.show()
 
-    S.add_edge(5, 8, label='c')
-    S.add_edge(6, 9, label='d')
-    S.add_edge(7, 10, label='e')
+    print(k.getCoarsestPartition(S, plot=True))
 
-    S.add_edge(8, 11, label='t')
-    S.add_edge(9, 11, label='t')
-    S.add_edge(10, 11, label='t')
 
-    labels = ['a', 'b', 'c', 'd', 'e', 'i','t']
-
-    return S, labels
 
 def example3():
 
     S, labels = get_k_struct()
     k = KanellakisAndSmolka(labels)
+    blocks = k.compute_coarsest_partition(S.reverse())
+    print('reverse:', blocks)
     blocks = k.compute_coarsest_partition(S)
-    print(blocks)
+    print('forward:', blocks)
     pos = nx.spring_layout(S)
     k.plotGraph(S, blocks, pos)
 
@@ -241,6 +247,9 @@ def coarsen_graph(S, blocks):
 
 if __name__ == '__main__':
 
+    example3()
+    exit()
+    # example4()
     S, labels = get_k_struct()
     k = KanellakisAndSmolka(labels)
     S_reverse = S.reverse()

@@ -1,8 +1,8 @@
 import networkx as nx
 from src.utils.project_constants import *
 
-INIT_LABEL = 'init'
-TERM_LABEL = 'term'
+INIT_LABEL = 'Initial'
+TERM_LABEL = 'Terminal'
 DOT_SUFFIX = ".dot"
 VERBOSE = True
 class KSequence: ## TODO incorporate to code; make object hashable
@@ -12,14 +12,24 @@ class KSequence: ## TODO incorporate to code; make object hashable
 
 class kTailsRunner:
 
-    def __init__(self, traces, k):
-
+    def __init__(self, traces, ks, k2s, default_k = 1):
         self.traces = traces.copy()
-        self.k = k
         self.ftr2ftrs = {}
         self.states2transitions2traces = {}
         self.g = None
         self.state2transitions2prob = None
+
+        ## fields for k-tails
+        specified_events = set([e for evs in k2s.values() for e in evs])
+        self.events = set([ev for tr in traces for ev in tr])
+        default_k_future_events = set([INIT_LABEL, TERM_LABEL])
+        for e in self.events:
+            if e not in specified_events:
+                default_k_future_events.add(e)
+        self.ks = sorted(ks, reverse=True)
+        self.k2s = k2s.copy()
+        for e in default_k_future_events:
+            self.k2s.setdefault(default_k, set()).add(e)
 
     def get_graph(self):
         return self.g
@@ -41,10 +51,11 @@ class kTailsRunner:
             self.ftr2ftrs[ftr] = futures
 
         def genFuture(trace, i):
-            for k in self.k:
-                w = trace[i:i+self.k]
-                if len(set(w).intersection(self.k2s(k))) > 0:
+            for k in self.ks:
+                w = trace[i: i + k]
+                if len(set(w).intersection(self.k2s.get(k, set()))) > 0:
                     return w
+            return w
 
         self.ftr2ftrs = dict()
         self.states2transitions2traces = dict()
@@ -55,8 +66,8 @@ class kTailsRunner:
             if add_dummy_terminal:
                 t = tuple(list(t) + [TERM_LABEL])
             for i in range(len(t)):
-                ftr = t[i:i+self.k]
-                next_ftr = t[i+1:i+self.k+1]
+                ftr = genFuture(t, i)
+                next_ftr = genFuture(t, i+1)
                 ## update data strucutre
                 update_ftr2ftr(ftr, next_ftr)
                 update_transitions2traces(ftr, next_ftr, tr_id)
@@ -70,6 +81,7 @@ class kTailsRunner:
 
         ftr2equiv_classes = self.ftr2equiv_classes.copy()
         incoming_transitions_dict = {}  ## maps each state to its incoming transitions
+        outoing_transitions_dict = {}  ## maps each state to its outgoing transitions
         state2id = {}  ## Q -> Equiv_id maps each state to id of equivelance class
 
         for ftr_state in self.ftr2ftrs:  ## iterator over the future transitions maps,
@@ -85,7 +97,7 @@ class kTailsRunner:
         ## variables collected for stats
         if VERBOSE: minimization_iterations, new_states, states_reads, states_seen_coutners = 0, 0, 0, {}
 
-        while True:  ## while there are states to examine
+        while states_queue:  ## while there are states to examine
 
             if VERBOSE: states_reads += len(states_queue)
             if VERBOSE: minimization_iterations += 1
@@ -96,14 +108,17 @@ class kTailsRunner:
                 past_equiv_classes.setdefault(state_incoming_transitions, set()).add(state)
                 if VERBOSE: states_seen_coutners[state] = states_seen_coutners.get(state, 0) + 1
 
+            states_queue = set()
             prev_max = max_id
             for equiv_class in past_equiv_classes.values():
+                equiv_id = max_id
                 if len(set([state2id[st] for st in equiv_class])) > 1:
                     for equiv_state in equiv_class:
-                        state2id[equiv_state] = max_id
+                        state2id[equiv_state] = equiv_id
                     max_id += 1
                     if VERBOSE: new_states += 1
 
+            states_queue = set(state2id.keys())
             if prev_max == max_id:
                 break
 
@@ -600,11 +615,3 @@ class kTailsRunner:
         return new_log
 
 
-if __name__ == '__main__':
-
-    traces = [
-        ['a', 'b', 'c', 'g'], ['a', 'b', 'd', 'g'], ['a', 'b', 'e', 'g']
-    ]
-    ktails = kTailsRunner(traces, 2)
-    ktails_model = ktails.run_ktails(add_dummy_init=True, add_dummy_terminal=True)
-    nx.drawing.nx_pydot.write_dot(ktails_model, 'out.dot')

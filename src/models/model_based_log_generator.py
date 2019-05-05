@@ -1,7 +1,10 @@
 import numpy as np
 from src.graphs.graphs import DGraph
 from src.main.config import RESULTS_PATH
+import random
 from src.ktails.ktails import INIT_LABEL, TERM_LABEL
+import os
+from src.logs.log_writer import LogWriter
 
 
 class LogGenerator:
@@ -191,14 +194,97 @@ class LogGenerator:
         return log
 
 
+def produce_mutated_log():
+
+    from src.models.protocol_models_to_logs import ProtocolModel
+    model_dir = 'C:/Users/USER/PycharmProjects/StatsLogDiffProject/models/'
+    ordset_path = model_dir + "stamina/ordSet.net.dot"
+    zip_path = model_dir + "/zeller/ZipOutputStream.dot"
+    smtp_path = model_dir + "/zeller/SMTPProtocol.dot"
+    # csv_path = model_dir + "stamina/cvs.net.dot"
+    ssh_path = model_dir + "stamina/ssh.net.dot"
+    tcp_path = model_dir + "stamina/tcpip.net.dot"
+    room_controller_path = model_dir + "stamina/roomcontroller.net.dot"
+
+    models_paths = [room_controller_path, ssh_path, tcp_path, ordset_path, zip_path, smtp_path, ]
+    models = ['roomcontroller', 'ssh', 'tcpip', 'ordSet', 'ZipOutputStream', 'SMTPProtocol']
+    for model_ind in range(len(models_paths)):
+        model_path = models_paths[model_ind]
+        model = models[model_ind]
+        for itr in range(3):
+            print('processing', model, 'run', itr)
+            model_output_path = "C:/Users/USER/PycharmProjects/StatsLogDiffProject/results/user_study_logs/" + model + "/series_" + str(itr) + "/"
+            if not os.path.exists(model_output_path):
+                os.makedirs(model_output_path)
+            for diff in [0.05, 0.1, 0.2]:
+                model_generator = ProtocolModel(model_path, 0, assign_transtion_probs=True)
+                log_gen = LogGenerator(model_generator.graph)
+                print('producing log 1')
+                log1 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                print('producing log 2')
+                log2 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                print('producing log 3')
+                log3 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                nodes = list(model_generator.graph.nodes())
+                random.shuffle(nodes)
+                mutation = ""
+                for n in nodes:
+                    print('edges of node', n)
+                    edges_tuples = log_gen.nodes_2_edges_dict[n]
+                    if len(edges_tuples['edges']) > 2:
+                        e1 = None
+                        e2 = None
+                        for i in range(len(edges_tuples['edges'])):
+                            e = edges_tuples['edges'][i]
+                            p = edges_tuples['transition_probability'][i]
+                            if p > diff:
+                                if e1 == None:
+                                    e1 = e
+                                else:
+                                    e2 = e
+
+                        if e1 and e2:
+                            e1_data = model_generator.graph.get_edge_data(e1)
+                            e2_data = model_generator.graph.get_edge_data(e2)
+                            mutation += "Before mutation:\n"
+                            mutation += " e1: " + str(e1) + ", label: " + e1_data['label'] + ", prob: " + str(e1_data['transition_probability']) + "\n"
+                            mutation += " e2: " + str(e2) + ", label: " + e2_data['label'] + ", prob: " + str(e2_data[
+                                'transition_probability']) + "\n"
+                            model_generator.graph.get_edge_data(e1)['transition_probability'] -= diff
+                            model_generator.graph.get_edge_data(e2)['transition_probability'] += diff
+                            mutation += "After mutation:\n"
+                            mutation += " e1: " + str(e1) + ", label: " + e1_data['label'] + ", prob: " + str(e1_data[
+                                'transition_probability']) + "\n"
+                            mutation += " e2: " + str(e2) + ", label: " + e2_data['label'] + ", prob: " + str(e2_data[
+                                'transition_probability']) + "\n"
+                            break
+
+                print('producing log 4')
+                log4 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                print('producing log 5')
+                log5 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                print('producing log 6')
+                log6 = LogGenerator.produce_log_from_model(model_generator.graph, 5000)
+                log_set_dir = model_output_path + "/" + "logset_" + str(diff) + "/"
+                if not os.path.exists(log_set_dir):
+                    os.makedirs(log_set_dir)
+                LogWriter.write_log(log1, log_set_dir + "log_tmp1.txt")
+                LogWriter.write_log(log2, log_set_dir + "log_tmp2.txt")
+                LogWriter.write_log(log3, log_set_dir + "log_tmp3.txt")
+                LogWriter.write_log(log4, log_set_dir + "log_tmp4.txt")
+                LogWriter.write_log(log5, log_set_dir + "log_tmp5.txt")
+                LogWriter.write_log(log6, log_set_dir + "log_tmp6.txt")
+                with open(log_set_dir + 'mutation.txt', 'w') as fw:
+                    fw.write(mutation)
 
 if __name__ == '__main__':
 
-    l1, l2 = LogGenerator.produce_toy_logs()
-    g = LogGenerator.generate_single_split_model()
-    g.write_dot(RESULTS_PATH + '/exmaple_1.dot', True)
-    ks_dict = {}
-    for i in range(100):
-        t = LogGenerator._generate_trace(g)
-        ks_dict[t] = ks_dict.get(t, 0) + 1
-    print (ks_dict)
+    produce_mutated_log()
+    # l1, l2 = LogGenerator.produce_toy_logs()
+    # g = LogGenerator.generate_single_split_model()
+    # g.write_dot(RESULTS_PATH + '/exmaple_1.dot', True)
+    # ks_dict = {}
+    # for i in range(100):
+    #     t = LogGenerator._generate_trace(g)
+    #     ks_dict[t] = ks_dict.get(t, 0) + 1
+    # print (ks_dict)

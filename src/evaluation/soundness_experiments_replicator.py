@@ -51,9 +51,9 @@ def run_evaluation_experiments(output_dir, logs_manager_, k_exp=False, diff_exp=
     if sample_exp: # snkdiff experiment varying samples
         print("==== RUNNING LOG_SIZE EXPERIMENTS ====")
         run_varying_param_experiment(output_dir, experiment_set_id, 1, logs_manager_, "sample_size",
-                                     traces_to_sample=[64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]) # 100,  500, 2500, 12500, 60000
+                                     traces_to_sample=[128, 256, 512, 1024, 2048, 4096, 8192, 16384]) # 100,  500, 2500, 12500, 60000
         run_varying_param_experiment(output_dir, experiment_set_id, 2, logs_manager_, "sample_size",
-                                     traces_to_sample=[64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]) #, 500, 1000, 5000, 10000, 50000]) ## 100, 1000, 10000, 50000
+                                     traces_to_sample=[128, 256, 512, 1024, 2048, 4096, 8192, 16384]) #, 500, 1000, 5000, 10000, 50000]) ## 100, 1000, 10000, 50000
 
     if logs_exp: # Experiment_setup VARYING LOGS!
         print("==== RUNNING NUMBER_OF_LOGS EXPERIMENTS ====")
